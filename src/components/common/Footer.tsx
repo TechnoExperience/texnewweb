@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Twitter, Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Instagram, Facebook, Twitter, Youtube, CheckCircle } from 'lucide-react';
+import useSupabase from '../../hooks/useSupabase';
 import { navigationItems } from '../../data/mockData';
 
 const Footer: React.FC = () => {
+  const { subscribeNewsletter } = useSupabase();
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const currentYear = new Date().getFullYear();
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    
+    setIsSubmitting(true);
+    setNewsletterStatus('idle');
+
+    try {
+      const result = await subscribeNewsletter(newsletterEmail);
+      
+      if (result) {
+        setNewsletterStatus('success');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      setNewsletterStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="bg-black border-t-2 border-gray-dark mt-section">
@@ -126,16 +155,35 @@ const Footer: React.FC = () => {
               <p className="text-gray-light font-space text-sm mb-3">
                 Suscríbete para recibir las últimas noticias y eventos.
               </p>
-              <div className="flex">
+              <form onSubmit={handleNewsletterSubmit} className="flex">
                 <input
                   type="email"
                   placeholder="tu@email.com"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   className="flex-1 bg-black border-2 border-gray-dark text-white px-3 py-2 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
+                  disabled={isSubmitting}
                 />
-                <button className="px-4 py-2 bg-neon-mint border-2 border-neon-mint text-black font-bebas text-sm tracking-wider hover:bg-transparent hover:text-neon-mint transition-colors brutal-border">
-                  OK
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 bg-neon-mint border-2 border-neon-mint text-black font-bebas text-sm tracking-wider hover:bg-transparent hover:text-neon-mint transition-colors brutal-border"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Suscribiéndome...' : 'OK'}
                 </button>
-              </div>
+              </form>
+              {newsletterStatus === 'success' && (
+                <div className="mt-3 text-green-500 text-sm flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Suscrito con éxito!
+                </div>
+              )}
+              {newsletterStatus === 'error' && (
+                <div className="mt-3 text-red-500 text-sm flex items-center">
+                  <span className="w-4 h-4 mr-1">!</span>
+                  Error al suscribirse. Inténtalo de nuevo.
+                </div>
+              )}
             </div>
 
             {/* Contact Info */}

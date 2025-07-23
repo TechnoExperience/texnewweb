@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Mail, MapPin, Phone, Send, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, Instagram, Facebook, Twitter, CheckCircle } from 'lucide-react';
+import useSupabase from '../hooks/useSupabase';
 
 const Contact: React.FC = () => {
+  const { createContactMessage, subscribeNewsletter } = useSupabase();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -10,10 +12,61 @@ const Contact: React.FC = () => {
     type: 'general'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const result = await createContactMessage({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject || `${formData.type} - ${formData.name}`,
+        message: formData.message
+      });
+
+      if (result) {
+        setSubmitStatus('success');
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: '',
+          type: 'general'
+        });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNewsletterStatus('idle');
+
+    try {
+      const result = await subscribeNewsletter(newsletterEmail);
+      
+      if (result) {
+        setNewsletterStatus('success');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      setNewsletterStatus('error');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -130,12 +183,26 @@ const Contact: React.FC = () => {
                 />
               </div>
 
+              {submitStatus === 'success' && (
+                <div className="flex items-center space-x-2 text-neon-mint mb-4">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-space text-sm">¡Mensaje enviado exitosamente!</span>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div className="text-red-500 mb-4 font-space text-sm">
+                  Error al enviar el mensaje. Por favor, inténtalo de nuevo.
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full md:w-auto px-8 py-4 bg-neon-mint text-black font-bebas text-lg tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 brutal-border flex items-center justify-center"
+                disabled={isSubmitting}
+                className="w-full md:w-auto px-8 py-4 bg-neon-mint text-black font-bebas text-lg tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 brutal-border flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="mr-2 w-5 h-5" />
-                ENVIAR MENSAJE
+                {isSubmitting ? 'ENVIANDO...' : 'ENVIAR MENSAJE'}
               </button>
             </form>
           </div>
