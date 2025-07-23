@@ -209,3 +209,83 @@ export interface SiteSettings {
     interactive_map: boolean;
   };
 }
+
+export interface MusicTrack {
+  id: string;
+  title: string;
+  artist_id?: string;
+  artist?: Artist;
+  album?: string;
+  genre?: string;
+  duration?: number; // duración en segundos
+  file_url: string; // URL del archivo de audio
+  cover_image_url?: string;
+  release_date?: string;
+  bpm?: number;
+  key?: string; // key musical
+  description?: string;
+  tags?: string[];
+  is_featured?: boolean;
+  is_active?: boolean;
+  play_count?: number;
+  download_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MusicUploadOptions {
+  maxSize?: number; // MB
+  allowedTypes?: string[];
+  folder?: string;
+}
+
+export interface AudioPlayerState {
+  isPlaying: boolean;
+  currentTrack?: MusicTrack;
+  playlist: MusicTrack[];
+  currentTime: number;
+  duration: number;
+  volume: number;
+  repeat: 'none' | 'one' | 'all';
+  shuffle: boolean;
+}
+
+// Extender UserProfile para gestión admin
+export interface UserProfile {
+  user_id: string;
+  email: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  role: 'user' | 'admin' | 'moderator';
+  is_active: boolean;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+  // Campos adicionales para gestión
+  login_count?: number;
+  favorite_genres?: string[];
+  subscription_status?: 'free' | 'premium';
+  blocked_until?: string;
+  notes?: string; // notas admin
+}
+
+export interface UserStats {
+  total_users: number;
+  active_users: number;
+  new_users_this_month: number;
+  premium_users: number;
+  blocked_users: number;
+  top_genres: { genre: string; count: number }[];
+}
+
+export interface MusicStats {
+  total_tracks: number;
+  active_tracks: number;
+  total_plays: number;
+  total_downloads: number;
+  top_genres: { genre: string; count: number }[];
+  most_played: MusicTrack[];
+  recent_uploads: MusicTrack[];
+}

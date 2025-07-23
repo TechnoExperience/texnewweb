@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Plus, 
@@ -11,321 +11,1051 @@ import {
   Calendar,
   FileText,
   Image,
-  Music
+  Music,
+  X,
+  Eye,
+  EyeOff,
+  Star,
+  MapPin,
+  Tag as TagIcon,
+  Loader2,
+  Check,
+  AlertCircle,
+  UserCheck,
+  UserX,
+  Shield,
+  Play,
+  Pause,
+  Volume2,
+  Ban,
+  UnlockKeyhole
 } from 'lucide-react';
-import { mockEvents, mockArticles } from '../data/mockData';
+import useSupabase from '../hooks/useSupabase';
+import { useAuth } from '../contexts/AuthContext';
+import ImageUpload from '../components/ui/ImageUpload';
+import AudioUpload from '../components/ui/AudioUpload';
+import type { Event, Artist, Article, Venue, MusicTrack, UserProfile } from '../data/types';
 
 const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedContent, setSelectedContent] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
+  const { supabase } = useSupabase();
 
-  const adminTabs = [
-    { id: 'dashboard', label: 'DASHBOARD', icon: BarChart3, color: '#A2F2C2' },
-    { id: 'events', label: 'EVENTOS', icon: Calendar, color: '#00CED1' },
-    { id: 'articles', label: 'ARTÍCULOS', icon: FileText, color: '#8A2BE2' },
-    { id: 'media', label: 'MEDIA', icon: Image, color: '#F2FF00' },
-    { id: 'users', label: 'USUARIOS', icon: Users, color: '#00FF00' },
-    { id: 'settings', label: 'CONFIGURACIÓN', icon: Settings, color: '#FF8C00' }
-  ];
+  // Estados para las diferentes secciones
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'artists' | 'articles' | 'venues' | 'music' | 'users'>('dashboard');
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [modalType, setModalType] = useState<'event' | 'artist' | 'article' | 'venue' | 'music' | 'user'>('event');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const stats = {
-    totalEvents: mockEvents.length,
-    totalArticles: mockArticles.length,
-    totalUsers: 1247,
-    monthlyViews: 25600
+  // Estados para datos
+  const [data, setData] = useState<{
+    events?: Event[];
+    artists?: Artist[];
+    articles?: Article[];
+    venues?: Venue[];
+  }>({});
+
+  // Estados para estadísticas
+  const [stats, setStats] = useState({
+    events: 0,
+    artists: 0,
+    articles: 0,
+    venues: 0,
+    music: 0,
+    users: 0,
+    activeUsers: 0,
+    totalPlays: 0
+  });
+
+  // Estados para música
+  const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
+  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+
+  // Estados para usuarios
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+      loadStats();
+    }
+  }, [user, activeTab]);
+
+  const fetchData = async (table: string) => {
+    try {
+      setLoading(true);
+      const { data: tableData, error } = await supabase
+        .from(table)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setData(prev => ({ ...prev, [table]: tableData || [] }));
+    } catch (error: any) {
+      setError(error.message);
+      console.error(`Error loading ${table}:`, error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const loadData = async () => {
+    try {
+      switch (activeTab) {
+        case 'events':
+          await fetchData('events');
+          break;
+        case 'artists':
+          await fetchData('artists');
+          break;
+        case 'articles':
+          await fetchData('articles');
+          break;
+        case 'venues':
+          await fetchData('venues');
+          break;
+        case 'music':
+          await loadMusicTracks();
+          break;
+        case 'users':
+          await loadUsers();
+          break;
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
+
+  const loadMusicTracks = async () => {
+    try {
+      const { data: tracks, error } = await supabase
+        .from('music_tracks')
+        .select(`
+          *,
+          artist:artists(name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMusicTracks(tracks || []);
+    } catch (error) {
+      console.error('Error loading music tracks:', error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const { data: userProfiles, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUsers(userProfiles || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const [
+        { count: eventsCount },
+        { count: artistsCount },
+        { count: articlesCount },
+        { count: venuesCount },
+        { count: musicCount },
+        { count: usersCount },
+        { count: activeUsersCount }
+      ] = await Promise.all([
+        supabase.from('events').select('*', { count: 'exact', head: true }),
+        supabase.from('artists').select('*', { count: 'exact', head: true }),
+        supabase.from('articles').select('*', { count: 'exact', head: true }),
+        supabase.from('venues').select('*', { count: 'exact', head: true }),
+        supabase.from('music_tracks').select('*', { count: 'exact', head: true }),
+        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('is_active', true)
+      ]);
+
+      // Obtener total de reproducciones
+      const { data: playsData } = await supabase
+        .from('music_tracks')
+        .select('play_count');
+      
+      const totalPlays = playsData?.reduce((sum, track) => sum + (track.play_count || 0), 0) || 0;
+
+      setStats({
+        events: eventsCount || 0,
+        artists: artistsCount || 0,
+        articles: articlesCount || 0,
+        venues: venuesCount || 0,
+        music: musicCount || 0,
+        users: usersCount || 0,
+        activeUsers: activeUsersCount || 0,
+        totalPlays
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const handleCreateMusic = async (formData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('music_tracks')
+        .insert([{
+          title: formData.title,
+          artist_id: formData.artist_id,
+          album: formData.album,
+          genre: formData.genre,
+          duration: formData.duration,
+          file_url: formData.file_url,
+          cover_image_url: formData.cover_image_url,
+          release_date: formData.release_date,
+          bpm: formData.bpm,
+          key: formData.key,
+          description: formData.description,
+          tags: formData.tags,
+          is_featured: formData.is_featured || false,
+          is_active: formData.is_active !== false
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      await loadMusicTracks();
+      setShowModal(false);
+      setEditingItem(null);
+    } catch (error) {
+      console.error('Error creating music track:', error);
+    }
+  };
+
+  const handleUpdateMusic = async (id: string, formData: any) => {
+    try {
+      const { error } = await supabase
+        .from('music_tracks')
+        .update({
+          title: formData.title,
+          artist_id: formData.artist_id,
+          album: formData.album,
+          genre: formData.genre,
+          duration: formData.duration,
+          file_url: formData.file_url,
+          cover_image_url: formData.cover_image_url,
+          release_date: formData.release_date,
+          bpm: formData.bpm,
+          key: formData.key,
+          description: formData.description,
+          tags: formData.tags,
+          is_featured: formData.is_featured || false,
+          is_active: formData.is_active !== false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadMusicTracks();
+      setShowModal(false);
+      setEditingItem(null);
+    } catch (error) {
+      console.error('Error updating music track:', error);
+    }
+  };
+
+  const handleDeleteMusic = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este track?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('music_tracks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await loadMusicTracks();
+    } catch (error) {
+      console.error('Error deleting music track:', error);
+    }
+  };
+
+  const handleUpdateUser = async (userId: string, updates: Partial<UserProfile>) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      await loadUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    await handleUpdateUser(userId, { is_active: !currentStatus });
+  };
+
+  const changeUserRole = async (userId: string, newRole: 'user' | 'admin' | 'moderator') => {
+    await handleUpdateUser(userId, { role: newRole });
+  };
+
+  const blockUser = async (userId: string, days: number = 7) => {
+    const blockedUntil = new Date();
+    blockedUntil.setDate(blockedUntil.getDate() + days);
+    
+    await handleUpdateUser(userId, { 
+      blocked_until: blockedUntil.toISOString(),
+      is_active: false 
+    });
+  };
+
+  const unblockUser = async (userId: string) => {
+    await handleUpdateUser(userId, { 
+      blocked_until: null,
+      is_active: true 
+    });
+  };
+
+  const playMusic = (trackId: string) => {
+    if (currentPlaying === trackId) {
+      setCurrentPlaying(null);
+    } else {
+      setCurrentPlaying(trackId);
+    }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gray-dark bg-opacity-50 p-6 brutal-border border-gray-dark">
+      {/* Estadísticas principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-light font-space text-sm">Total Eventos</p>
-              <p className="font-bebas text-3xl text-neon-mint">{stats.totalEvents}</p>
+              <p className="text-gray-light font-space text-sm">Eventos</p>
+              <p className="text-2xl font-bold text-white">{stats.events}</p>
             </div>
             <Calendar className="w-8 h-8 text-neon-mint" />
           </div>
         </div>
-        
-        <div className="bg-gray-dark bg-opacity-50 p-6 brutal-border border-gray-dark">
+
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-light font-space text-sm">Total Artículos</p>
-              <p className="font-bebas text-3xl text-neon-pink">{stats.totalArticles}</p>
+              <p className="text-gray-light font-space text-sm">Artistas</p>
+              <p className="text-2xl font-bold text-white">{stats.artists}</p>
             </div>
-            <FileText className="w-8 h-8 text-neon-pink" />
+            <Users className="w-8 h-8 text-neon-mint" />
           </div>
         </div>
-        
-        <div className="bg-gray-dark bg-opacity-50 p-6 brutal-border border-gray-dark">
+
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-light font-space text-sm">Total Usuarios</p>
-              <p className="font-bebas text-3xl text-neon-yellow">{stats.totalUsers}</p>
+              <p className="text-gray-light font-space text-sm">Tracks</p>
+              <p className="text-2xl font-bold text-white">{stats.music}</p>
             </div>
-            <Users className="w-8 h-8 text-neon-yellow" />
+            <Music className="w-8 h-8 text-neon-mint" />
           </div>
         </div>
-        
-        <div className="bg-gray-dark bg-opacity-50 p-6 brutal-border border-gray-dark">
+
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-light font-space text-sm">Vistas Mensuales</p>
-              <p className="font-bebas text-3xl text-white">{stats.monthlyViews.toLocaleString()}</p>
+              <p className="text-gray-light font-space text-sm">Usuarios Activos</p>
+              <p className="text-2xl font-bold text-white">{stats.activeUsers}</p>
             </div>
-            <BarChart3 className="w-8 h-8 text-white" />
+            <UserCheck className="w-8 h-8 text-neon-mint" />
           </div>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-gray-dark bg-opacity-30 p-6 brutal-border border-gray-dark">
-        <h3 className="font-bebas text-xl tracking-wider text-white mb-4">
-          ACTIVIDAD RECIENTE
-        </h3>
-        <div className="space-y-3">
-          {[
-            { action: 'Nuevo evento creado', item: 'DANCE CONTROL', time: 'hace 2 horas', type: 'create' },
-            { action: 'Artículo publicado', item: 'Karretero EP Review', time: 'hace 5 horas', type: 'publish' },
-            { action: 'Usuario registrado', item: 'techno_fan_92', time: 'hace 1 día', type: 'user' },
-            { action: 'Media subida', item: 'flyer_veta_2025.jpg', time: 'hace 2 días', type: 'media' }
-          ].map((activity, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-black bg-opacity-30 brutal-border border-gray-dark">
-              <div className="flex items-center space-x-3">
-                <div className={`w-2 h-2 ${
-                  activity.type === 'create' ? 'bg-neon-mint' :
-                  activity.type === 'publish' ? 'bg-neon-pink' :
-                  activity.type === 'user' ? 'bg-neon-yellow' : 'bg-white'
-                }`} />
-                <div>
-                  <p className="text-white font-space text-sm">{activity.action}</p>
-                  <p className="text-gray-light font-space text-xs">{activity.item}</p>
+      {/* Estadísticas adicionales */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
+          <h3 className="text-white font-space text-lg mb-4">Reproducciones Totales</h3>
+          <p className="text-3xl font-bold text-neon-mint">{stats.totalPlays.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
+          <h3 className="text-white font-space text-lg mb-4">Total Usuarios</h3>
+          <p className="text-3xl font-bold text-neon-cyan">{stats.users}</p>
+        </div>
+
+        <div className="bg-gray-dark p-6 brutal-border border-gray-600">
+          <h3 className="text-white font-space text-lg mb-4">Artículos</h3>
+          <p className="text-3xl font-bold text-neon-pink">{stats.articles}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMusicSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Música</h2>
+        <button
+          onClick={() => {
+            setModalType('music');
+            setEditingItem(null);
+            setShowModal(true);
+          }}
+          className="bg-neon-mint text-black px-4 py-2 font-space font-bold hover:bg-neon-cyan transition-colors"
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Nuevo Track
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {musicTracks.map((track) => (
+          <div key={track.id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 flex-1">
+                {/* Play Button */}
+                <button
+                  onClick={() => playMusic(track.id)}
+                  className="w-10 h-10 bg-neon-mint text-black rounded-full flex items-center justify-center hover:bg-neon-cyan transition-colors"
+                >
+                  {currentPlaying === track.id ? (
+                    <Pause className="w-5 h-5" />
+                  ) : (
+                    <Play className="w-5 h-5 ml-0.5" />
+                  )}
+                </button>
+
+                {/* Track Info */}
+                <div className="flex-1">
+                  <h3 className="text-white font-space font-bold">{track.title}</h3>
+                  <p className="text-gray-light text-sm">{track.artist?.name || 'Artista desconocido'}</p>
+                  <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                    {track.genre && <span>{track.genre}</span>}
+                    {track.duration && <span>{formatTime(track.duration)}</span>}
+                    {track.bpm && <span>{track.bpm} BPM</span>}
+                    <span>{track.play_count || 0} reproducciones</span>
+                  </div>
+                </div>
+
+                {/* Status Badges */}
+                <div className="flex items-center space-x-2">
+                  {track.is_featured && (
+                    <span className="bg-neon-mint text-black px-2 py-1 text-xs font-space">
+                      DESTACADO
+                    </span>
+                  )}
+                  <span className={`px-2 py-1 text-xs font-space ${
+                    track.is_active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                  }`}>
+                    {track.is_active ? 'ACTIVO' : 'INACTIVO'}
+                  </span>
                 </div>
               </div>
-              <p className="text-gray-light font-space text-xs">{activity.time}</p>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setModalType('music');
+                    setEditingItem(track);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-light hover:text-neon-mint transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteMusic(track.id)}
+                  className="p-2 text-gray-light hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 
-  const renderContentTable = (content: any[], type: 'events' | 'articles') => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bebas text-2xl tracking-wider text-white">
-          {type === 'events' ? 'GESTIÓN DE EVENTOS' : 'GESTIÓN DE ARTÍCULOS'}
-        </h3>
-        <button className="px-4 py-2 bg-neon-mint text-black font-bebas tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 brutal-border flex items-center">
-          <Plus className="w-4 h-4 mr-2" />
-          CREAR {type === 'events' ? 'EVENTO' : 'ARTÍCULO'}
-        </button>
+  const renderUsersSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Usuarios</h2>
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar usuarios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-gray-dark text-white border border-gray-600 px-4 py-2 font-space text-sm w-64 focus:outline-none focus:border-neon-mint"
+            />
+          </div>
+        </div>
       </div>
-      
-      <div className="bg-gray-dark bg-opacity-30 brutal-border border-gray-dark overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-black">
-            <tr>
-              <th className="text-left p-4 font-bebas text-sm tracking-wider text-gray-light">TÍTULO</th>
-              <th className="text-left p-4 font-bebas text-sm tracking-wider text-gray-light">FECHA</th>
-              <th className="text-left p-4 font-bebas text-sm tracking-wider text-gray-light">ESTADO</th>
-              <th className="text-left p-4 font-bebas text-sm tracking-wider text-gray-light">ACCIONES</th>
-            </tr>
-          </thead>
-          <tbody>
-            {content.slice(0, 5).map((item, index) => (
-              <tr key={item.id} className="border-b border-gray-dark hover:bg-black hover:bg-opacity-30">
-                <td className="p-4">
-                  <div>
-                    <p className="text-white font-space text-sm">{item.title}</p>
-                    {item.subtitle && (
-                      <p className="text-gray-light font-space text-xs">{item.subtitle}</p>
+
+      <div className="grid gap-4">
+        {filteredUsers.map((user) => (
+          <div key={user.user_id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 flex-1">
+                {/* Avatar */}
+                <div className="w-12 h-12 bg-neon-mint rounded-full flex items-center justify-center">
+                  {user.avatar_url ? (
+                    <img 
+                      src={user.avatar_url} 
+                      alt={user.full_name || user.email}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <Users className="w-6 h-6 text-black" />
+                  )}
+                </div>
+
+                {/* User Info */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-white font-space font-bold">
+                      {user.full_name || user.username || 'Usuario sin nombre'}
+                    </h3>
+                    <span className={`px-2 py-1 text-xs font-space ${
+                      user.role === 'admin' ? 'bg-red-500 text-white' :
+                      user.role === 'moderator' ? 'bg-yellow-500 text-black' :
+                      'bg-blue-500 text-white'
+                    }`}>
+                      {user.role?.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-gray-light text-sm">{user.email}</p>
+                  <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                    <span>Registro: {new Date(user.created_at).toLocaleDateString()}</span>
+                    {user.last_login && (
+                      <span>Último acceso: {new Date(user.last_login).toLocaleDateString()}</span>
+                    )}
+                    {user.subscription_status && (
+                      <span className="capitalize">{user.subscription_status}</span>
                     )}
                   </div>
-                </td>
-                <td className="p-4">
-                  <p className="text-gray-light font-space text-xs">
-                    {type === 'events' ? item.date : item.created_at}
-                  </p>
-                </td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 font-space text-xs brutal-border ${
-                    item.featured 
-                      ? 'bg-neon-mint text-black border-neon-mint' 
-                      : type === 'articles' && item.published
-                        ? 'bg-neon-yellow text-black border-neon-yellow'
-                        : 'bg-gray-dark text-white border-gray-dark'
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 text-xs font-space ${
+                    user.is_active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
                   }`}>
-                    {item.featured ? 'DESTACADO' : 
-                     type === 'articles' ? (item.published ? 'PUBLICADO' : 'BORRADOR') : 'ACTIVO'}
+                    {user.is_active ? 'ACTIVO' : 'INACTIVO'}
                   </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex space-x-2">
-                    <button className="p-2 bg-transparent border border-gray-dark hover:border-neon-mint hover:text-neon-mint transition-colors">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 bg-transparent border border-gray-dark hover:border-neon-pink hover:text-neon-pink transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {user.blocked_until && new Date(user.blocked_until) > new Date() && (
+                    <span className="bg-red-600 text-white px-2 py-1 text-xs font-space">
+                      BLOQUEADO
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center space-x-2">
+                {/* Toggle Active Status */}
+                <button
+                  onClick={() => toggleUserStatus(user.user_id, user.is_active)}
+                  className={`p-2 ${
+                    user.is_active ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
+                  } transition-colors`}
+                  title={user.is_active ? 'Desactivar usuario' : 'Activar usuario'}
+                >
+                  {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                </button>
+
+                {/* Role Management */}
+                <select
+                  value={user.role}
+                  onChange={(e) => changeUserRole(user.user_id, e.target.value as any)}
+                  className="bg-gray-800 text-white border border-gray-600 px-2 py-1 text-xs font-space"
+                >
+                  <option value="user">Usuario</option>
+                  <option value="moderator">Moderador</option>
+                  <option value="admin">Admin</option>
+                </select>
+
+                {/* Block/Unblock */}
+                {user.blocked_until && new Date(user.blocked_until) > new Date() ? (
+                  <button
+                    onClick={() => unblockUser(user.user_id)}
+                    className="p-2 text-yellow-400 hover:text-yellow-300 transition-colors"
+                    title="Desbloquear usuario"
+                  >
+                    <UnlockKeyhole className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => blockUser(user.user_id)}
+                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                    title="Bloquear usuario (7 días)"
+                  >
+                    <Ban className="w-4 h-4" />
+                  </button>
+                )}
+
+                {/* Edit User */}
+                <button
+                  onClick={() => {
+                    setModalType('user');
+                    setEditingItem(user);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-light hover:text-neon-mint transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <h3 className="font-bebas text-2xl tracking-wider text-white">
-        CONFIGURACIÓN DEL SITIO
-      </h3>
+  const renderModal = () => {
+    if (!showModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-dark brutal-border border-gray-600 max-w-2xl w-full max-h-screen overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white font-space">
+                {editingItem ? 'Editar' : 'Crear'} {
+                  modalType === 'music' ? 'Track Musical' :
+                  modalType === 'user' ? 'Usuario' :
+                  modalType.charAt(0).toUpperCase() + modalType.slice(1)
+                }
+              </h2>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingItem(null);
+                }}
+                className="text-gray-light hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {modalType === 'music' && <MusicForm />}
+            {modalType === 'user' && <UserForm />}
+            {/* Mantener los formularios existentes para otros tipos */}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const MusicForm = () => {
+    const [formData, setFormData] = useState({
+      title: editingItem?.title || '',
+      artist_id: editingItem?.artist_id || '',
+      album: editingItem?.album || '',
+      genre: editingItem?.genre || '',
+      duration: editingItem?.duration || 0,
+      file_url: editingItem?.file_url || '',
+      cover_image_url: editingItem?.cover_image_url || '',
+      release_date: editingItem?.release_date || '',
+      bpm: editingItem?.bpm || '',
+      key: editingItem?.key || '',
+      description: editingItem?.description || '',
+      tags: editingItem?.tags?.join(', ') || '',
+      is_featured: editingItem?.is_featured || false,
+      is_active: editingItem?.is_active !== false
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* General Settings */}
-        <div className="bg-gray-dark bg-opacity-30 p-6 brutal-border border-gray-dark">
-          <h4 className="font-bebas text-lg tracking-wider text-neon-mint mb-4">
-            CONFIGURACIÓN GENERAL
-          </h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Nombre del Sitio
-              </label>
-              <input
-                type="text"
-                value="TECHNO EXPERIENCE"
-                className="w-full bg-black border-2 border-gray-dark text-white px-4 py-2 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
-              />
-            </div>
-            <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Descripción
-              </label>
-              <textarea
-                value="Portal Cultural Inmersivo de la Escena Techno"
-                rows={3}
-                className="w-full bg-black border-2 border-gray-dark text-white px-4 py-2 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border resize-none"
-              />
-            </div>
+      const submitData = {
+        ...formData,
+        bpm: formData.bpm ? parseInt(formData.bpm) : null,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
+      };
+
+      if (editingItem) {
+        await handleUpdateMusic(editingItem.id, submitData);
+      } else {
+        await handleCreateMusic(submitData);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Título *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Artista</label>
+            <select
+              value={formData.artist_id}
+              onChange={(e) => setFormData({...formData, artist_id: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="">Seleccionar artista</option>
+              {data.artists?.map((artist: Artist) => (
+                <option key={artist.id} value={artist.id}>
+                  {artist.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Álbum</label>
+            <input
+              type="text"
+              value={formData.album}
+              onChange={(e) => setFormData({...formData, album: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Género</label>
+            <input
+              type="text"
+              value={formData.genre}
+              onChange={(e) => setFormData({...formData, genre: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">BPM</label>
+            <input
+              type="number"
+              value={formData.bpm}
+              onChange={(e) => setFormData({...formData, bpm: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Key Musical</label>
+            <input
+              type="text"
+              value={formData.key}
+              onChange={(e) => setFormData({...formData, key: e.target.value})}
+              placeholder="Ej: Am, C#, F"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
           </div>
         </div>
 
-        {/* SEO Settings */}
-        <div className="bg-gray-dark bg-opacity-30 p-6 brutal-border border-gray-dark">
-          <h4 className="font-bebas text-lg tracking-wider text-neon-pink mb-4">
-            CONFIGURACIÓN SEO
-          </h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Meta Title
-              </label>
-              <input
-                type="text"
-                value="Techno Experience | Portal Cultural Techno"
-                className="w-full bg-black border-2 border-gray-dark text-white px-4 py-2 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
-              />
-            </div>
-            <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Meta Description
-              </label>
-              <textarea
-                value="Descubre la mejor música techno, eventos exclusivos y contenido editorial underground en el portal cultural más completo de la escena electrónica."
-                rows={3}
-                className="w-full bg-black border-2 border-gray-dark text-white px-4 py-2 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border resize-none"
-              />
-            </div>
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Fecha de Lanzamiento</label>
+          <input
+            type="date"
+            value={formData.release_date}
+            onChange={(e) => setFormData({...formData, release_date: e.target.value})}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Tags (separados por comas)</label>
+          <input
+            type="text"
+            value={formData.tags}
+            onChange={(e) => setFormData({...formData, tags: e.target.value})}
+            placeholder="techno, underground, dark"
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Descripción</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            rows={3}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <AudioUpload
+          onUpload={(url, duration) => setFormData({...formData, file_url: url, duration})}
+          currentAudio={formData.file_url}
+          label="Archivo de Audio *"
+        />
+
+        <ImageUpload
+          onUpload={(url) => setFormData({...formData, cover_image_url: url})}
+          currentImage={formData.cover_image_url}
+          label="Imagen de Portada"
+          resize={{ width: 800, height: 800 }}
+        />
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.is_featured}
+              onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Track Destacado</span>
+          </label>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.is_active}
+              onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Activo</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear')}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  const UserForm = () => {
+    const [formData, setFormData] = useState({
+      full_name: editingItem?.full_name || '',
+      username: editingItem?.username || '',
+      bio: editingItem?.bio || '',
+      role: editingItem?.role || 'user',
+      is_active: editingItem?.is_active !== false,
+      subscription_status: editingItem?.subscription_status || 'free',
+      notes: editingItem?.notes || ''
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      if (editingItem) {
+        await handleUpdateUser(editingItem.user_id, formData);
+        setShowModal(false);
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Nombre Completo</label>
+            <input
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Username</label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Rol</label>
+            <select
+              value={formData.role}
+              onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="user">Usuario</option>
+              <option value="moderator">Moderador</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Suscripción</label>
+            <select
+              value={formData.subscription_status}
+              onChange={(e) => setFormData({...formData, subscription_status: e.target.value as any})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="free">Gratis</option>
+              <option value="premium">Premium</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      <div className="text-center">
-        <button className="px-8 py-4 bg-neon-mint text-black font-bebas text-lg tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 brutal-border flex items-center mx-auto">
-          <Save className="w-5 h-5 mr-2" />
-          GUARDAR CONFIGURACIÓN
-        </button>
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Biografía</label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+            rows={3}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Notas Admin</label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => setFormData({...formData, notes: e.target.value})}
+            rows={2}
+            placeholder="Notas internas para administradores..."
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.is_active}
+              onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Usuario Activo</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Actualizar Usuario'}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-white font-space">Acceso denegado. Debes estar autenticado.</p>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black pt-8">
-      <div className="container mx-auto px-4">
-        {/* Admin Header */}
-        <div className="mb-component">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-10 h-10 bg-neon-mint brutal-border border-neon-mint flex items-center justify-center">
-              <Settings className="w-5 h-5 text-black" />
-            </div>
-            <h1 className="font-bebas text-4xl md:text-6xl tracking-wider text-white">
-              PANEL DE ADMINISTRACIÓN
-            </h1>
-          </div>
-          <p className="text-gray-light font-space text-lg">
-            Sistema de gestión de contenido para Techno Experience
-          </p>
+    <div className="min-h-screen bg-black text-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold font-space mb-2">PANEL DE ADMINISTRACIÓN</h1>
+          <p className="text-gray-light font-space">Gestiona todo el contenido de TECHNO EXPERIENCE</p>
         </div>
 
-        {/* Admin Navigation */}
-        <div className="flex flex-wrap gap-2 mb-component">
-          {adminTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 font-bebas text-sm tracking-wider brutal-border transition-all duration-300 flex items-center ${
-                activeTab === tab.id
-                  ? 'text-black border-2'
-                  : 'bg-transparent text-white border-gray-dark hover:border-white'
-              }`}
-              style={{
-                backgroundColor: activeTab === tab.id ? tab.color : 'transparent',
-                borderColor: activeTab === tab.id ? tab.color : ''
-              }}
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-            </button>
-          ))}
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+            { id: 'events', label: 'Eventos', icon: Calendar },
+            { id: 'artists', label: 'Artistas', icon: Users },
+            { id: 'articles', label: 'Artículos', icon: FileText },
+            { id: 'venues', label: 'Venues', icon: MapPin },
+            { id: 'music', label: 'Música', icon: Music },
+            { id: 'users', label: 'Usuarios', icon: UserCheck }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2 font-space font-bold transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-neon-mint text-black'
+                    : 'bg-gray-dark text-gray-light hover:text-white border border-gray-600'
+                }`}
+              >
+                <Icon className="w-4 h-4 inline mr-2" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Content Area */}
-        <div className="bg-black bg-opacity-50 p-6 brutal-border border-gray-dark">
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'events' && renderContentTable(mockEvents, 'events')}
-          {activeTab === 'articles' && renderContentTable(mockArticles, 'articles')}
-          {activeTab === 'media' && (
-            <div className="text-center py-16">
-              <Upload className="w-16 h-16 text-gray-light mx-auto mb-4" />
-              <h3 className="font-bebas text-2xl tracking-wider text-white mb-2">
-                GESTIÓN DE MEDIA
-              </h3>
-              <p className="text-gray-light font-space text-sm">
-                Funcionalidad de gestión de archivos multimedia en desarrollo
-              </p>
+        {/* Content */}
+        <div className="min-h-[400px]">
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-neon-mint" />
             </div>
           )}
-          {activeTab === 'users' && (
-            <div className="text-center py-16">
-              <Users className="w-16 h-16 text-gray-light mx-auto mb-4" />
-              <h3 className="font-bebas text-2xl tracking-wider text-white mb-2">
-                GESTIÓN DE USUARIOS
-              </h3>
-              <p className="text-gray-light font-space text-sm">
-                Sistema de gestión de usuarios en desarrollo
-              </p>
+
+          {error && (
+            <div className="bg-red-500 bg-opacity-20 border border-red-500 p-4 brutal-border mb-6">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+                <span className="text-red-300 font-space">Error: {error}</span>
+              </div>
             </div>
           )}
-          {activeTab === 'settings' && renderSettings()}
+
+          {!loading && (
+            <>
+              {activeTab === 'dashboard' && renderDashboard()}
+              {activeTab === 'music' && renderMusicSection()}
+              {activeTab === 'users' && renderUsersSection()}
+              {/* Mantener las secciones existentes para events, artists, articles, venues */}
+            </>
+          )}
         </div>
       </div>
+
+      {renderModal()}
     </div>
   );
 };

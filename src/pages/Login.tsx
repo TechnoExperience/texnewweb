@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -12,8 +13,9 @@ const Login: React.FC = () => {
     name: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
-  const { login, register, isLoading } = useAuth();
+  const { login, register, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -22,24 +24,63 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+
+    if (isResetMode) {
+      if (!formData.email.trim()) {
+        setError('El email es requerido');
+        return;
+      }
+
+      const result = await resetPassword(formData.email);
+      if (result.success) {
+        setSuccess('Se ha enviado un email con las instrucciones para restablecer tu contraseña');
+        setFormData({ email: '', password: '', name: '' });
+        setIsResetMode(false);
+      } else {
+        setError(result.error || 'Error al enviar email de recuperación');
+      }
+      return;
+    }
 
     if (isLoginMode) {
-      const success = await login(formData.email, formData.password);
-      if (success) {
+      if (!formData.email.trim() || !formData.password.trim()) {
+        setError('Email y contraseña son requeridos');
+        return;
+      }
+
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
         navigate(from, { replace: true });
       } else {
-        setError('Email o contraseña incorrectos');
+        setError(result.error || 'Error al iniciar sesión');
       }
     } else {
       if (!formData.name.trim()) {
         setError('El nombre es requerido');
         return;
       }
-      const success = await register(formData.email, formData.password, formData.name);
-      if (success) {
-        navigate(from, { replace: true });
+      if (!formData.email.trim() || !formData.password.trim()) {
+        setError('Todos los campos son requeridos');
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+
+      const result = await register(formData.email, formData.password, formData.name);
+      if (result.success) {
+        if (result.error) {
+          // Caso de confirmación de email
+          setSuccess(result.error);
+          setIsLoginMode(true);
+          setFormData({ ...formData, password: '', name: '' });
+        } else {
+          navigate(from, { replace: true });
+        }
       } else {
-        setError('Este email ya está registrado');
+        setError(result.error || 'Error al registrarse');
       }
     }
   };
@@ -49,165 +90,229 @@ const Login: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    if (error) setError('');
+    // Limpiar mensajes al cambiar campos
+    setError('');
+    setSuccess('');
   };
 
-  const demoCredentials = [
-    { role: 'Administrador', email: 'admin@technoexperience.net', password: 'techno2025' },
-    { role: 'Editor', email: 'editor@technoexperience.net', password: 'editor123' },
-    { role: 'Redactor', email: 'redactor@technoexperience.net', password: 'redactor123' }
-  ];
+  const switchMode = () => {
+    setIsLoginMode(!isLoginMode);
+    setIsResetMode(false);
+    setError('');
+    setSuccess('');
+    setFormData({ email: '', password: '', name: '' });
+  };
+
+  const switchToResetMode = () => {
+    setIsResetMode(true);
+    setIsLoginMode(false);
+    setError('');
+    setSuccess('');
+    setFormData({ email: '', password: '', name: '' });
+  };
+
+  const backToLogin = () => {
+    setIsResetMode(false);
+    setIsLoginMode(true);
+    setError('');
+    setSuccess('');
+    setFormData({ email: '', password: '', name: '' });
+  };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
+      <div className="w-full max-w-md">
+        {/* Logo/Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-neon-mint brutal-border border-neon-mint flex items-center justify-center">
-              <span className="font-jetbrains font-bold text-black text-lg">TE</span>
-            </div>
-            <div>
-              <h1 className="font-bebas text-2xl tracking-wider text-white">
-                TECHNO EXPERIENCE
-              </h1>
-            </div>
+          <Link to="/" className="inline-block">
+            <h1 className="font-bebas text-4xl text-white tracking-wider hover:text-neon-mint transition-colors">
+              TECHNO<span className="text-neon-mint">EXPERIENCE</span>
+            </h1>
           </Link>
         </div>
 
-        {/* Form */}
-        <div className="bg-gray-dark bg-opacity-50 p-8 brutal-border border-gray-dark">
-          <div className="mb-6">
-            <h2 className="font-bebas text-3xl tracking-wider text-white mb-2">
-              {isLoginMode ? 'INICIAR SESIÓN' : 'CREAR CUENTA'}
+        {/* Form Container */}
+        <div className="bg-gray-dark bg-opacity-50 p-8 brutal-border border-gray-600">
+          <div className="text-center mb-6">
+            <h2 className="font-bebas text-2xl text-white tracking-wider">
+              {isResetMode ? 'RECUPERAR CONTRASEÑA' : isLoginMode ? 'INICIAR SESIÓN' : 'REGISTRARSE'}
             </h2>
-            <p className="text-gray-light font-space text-sm">
-              {isLoginMode 
+            <p className="text-gray-light font-space text-sm mt-2">
+              {isResetMode 
+                ? 'Ingresa tu email para recibir instrucciones'
+                : isLoginMode 
                 ? 'Accede al panel de administración' 
-                : 'Únete a la comunidad techno'}
+                : 'Crea tu cuenta de redactor'
+              }
             </p>
           </div>
 
+          {/* Error/Success Messages */}
           {error && (
-            <div className="mb-6 p-4 bg-red-900 bg-opacity-50 border-2 border-red-500 text-red-200 font-space text-sm brutal-border">
-              {error}
+            <div className="mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" />
+              <span className="text-red-300 font-space text-sm">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLoginMode && (
+          {success && (
+            <div className="mb-4 p-3 bg-green-500 bg-opacity-20 border border-green-500 flex items-center">
+              <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" />
+              <span className="text-green-300 font-space text-sm">{success}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name Field (only for register) */}
+            {!isLoginMode && !isResetMode && (
               <div>
-                <label className="block font-space text-sm text-gray-light mb-2">
-                  Nombre completo *
+                <label className="block text-white font-space text-sm mb-2">
+                  Nombre completo
                 </label>
                 <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-light w-5 h-5" />
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    required={!isLoginMode}
-                    className="w-full bg-black border-2 border-gray-dark text-white px-4 py-3 pl-12 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
-                    placeholder="Tu nombre"
+                    className="w-full bg-black border-2 border-gray-dark text-white pl-12 pr-4 py-3 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
+                    placeholder="Tu nombre completo"
+                    disabled={isLoading}
                   />
-                  <User className="absolute left-4 top-3.5 w-4 h-4 text-gray-light" />
                 </div>
               </div>
             )}
 
+            {/* Email Field */}
             <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Email *
+              <label className="block text-white font-space text-sm mb-2">
+                Email
               </label>
               <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-light w-5 h-5" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
-                  className="w-full bg-black border-2 border-gray-dark text-white px-4 py-3 pl-12 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
+                  className="w-full bg-black border-2 border-gray-dark text-white pl-12 pr-4 py-3 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
                   placeholder="tu@email.com"
+                  disabled={isLoading}
                 />
-                <Mail className="absolute left-4 top-3.5 w-4 h-4 text-gray-light" />
               </div>
             </div>
 
-            <div>
-              <label className="block font-space text-sm text-gray-light mb-2">
-                Contraseña *
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full bg-black border-2 border-gray-dark text-white px-4 py-3 pl-12 pr-12 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
-                  placeholder="••••••••"
-                />
-                <Lock className="absolute left-4 top-3.5 w-4 h-4 text-gray-light" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 w-4 h-4 text-gray-light hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {/* Password Field (not for reset mode) */}
+            {!isResetMode && (
+              <div>
+                <label className="block text-white font-space text-sm mb-2">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-light w-5 h-5" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full bg-black border-2 border-gray-dark text-white pl-12 pr-12 py-3 font-space text-sm focus:border-neon-mint focus:outline-none brutal-border"
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-light hover:text-white transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {!isLoginMode && (
+                  <p className="text-gray-light font-space text-xs mt-1">
+                    Mínimo 6 caracteres
+                  </p>
+                )}
               </div>
-            </div>
+            )}
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full px-6 py-4 bg-neon-mint text-black font-bebas text-lg tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 brutal-border disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-neon-mint text-black py-3 font-bebas text-lg tracking-wider hover:bg-transparent hover:text-neon-mint border-2 border-neon-mint transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  PROCESANDO...
+                </>
               ) : (
-                isLoginMode ? 'INICIAR SESIÓN' : 'CREAR CUENTA'
+                isResetMode ? 'ENVIAR EMAIL' : isLoginMode ? 'INICIAR SESIÓN' : 'REGISTRARSE'
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsLoginMode(!isLoginMode);
-                setError('');
-                setFormData({ email: '', password: '', name: '' });
-              }}
-              className="text-gray-light font-space text-sm hover:text-neon-mint transition-colors"
-            >
-              {isLoginMode 
-                ? '¿No tienes cuenta? Regístrate aquí' 
-                : '¿Ya tienes cuenta? Inicia sesión'}
-            </button>
+          {/* Mode Switchers */}
+          <div className="mt-6 space-y-3">
+            {!isResetMode && (
+              <>
+                {isLoginMode && (
+                  <button
+                    onClick={switchToResetMode}
+                    className="block w-full text-center text-gray-light hover:text-white transition-colors font-space text-sm"
+                    disabled={isLoading}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+                
+                <div className="text-center">
+                  <span className="text-gray-light font-space text-sm">
+                    {isLoginMode ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+                  </span>
+                  <button
+                    onClick={switchMode}
+                    className="ml-2 text-neon-mint hover:text-white transition-colors font-space text-sm"
+                    disabled={isLoading}
+                  >
+                    {isLoginMode ? 'Regístrate' : 'Inicia sesión'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {isResetMode && (
+              <button
+                onClick={backToLogin}
+                className="block w-full text-center text-gray-light hover:text-white transition-colors font-space text-sm"
+                disabled={isLoading}
+              >
+                Volver al inicio de sesión
+              </button>
+            )}
           </div>
+
+          {/* Demo Users Info */}
+          {isLoginMode && !isResetMode && (
+            <div className="mt-8 p-4 bg-gray-dark bg-opacity-30 border border-gray-600">
+              <p className="text-gray-light font-space text-xs mb-2">
+                Para probar la aplicación, puedes registrarte o contactar al administrador para obtener credenciales.
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Demo Credentials */}
-        <div className="mt-8 bg-gray-dark bg-opacity-30 p-6 brutal-border border-gray-dark">
-          <h3 className="font-bebas text-lg tracking-wider text-neon-yellow mb-4">
-            CREDENCIALES DE DEMO
-          </h3>
-          <div className="space-y-3">
-            {demoCredentials.map((cred, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div>
-                  <div className="font-space text-white">{cred.role}</div>
-                  <div className="font-space text-gray-light text-xs">{cred.email}</div>
-                </div>
-                <div className="font-space text-neon-mint text-xs">
-                  {cred.password}
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-gray-light font-space text-xs mt-4">
-            Usa estas credenciales para probar diferentes niveles de acceso.
-          </p>
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <Link 
+            to="/" 
+            className="text-gray-light hover:text-white transition-colors font-space text-sm"
+          >
+            ← Volver al sitio web
+          </Link>
         </div>
       </div>
     </div>
