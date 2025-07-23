@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -10,17 +10,36 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
+  const [timeoutReached, setTimeoutReached] = useState(false);
+
+  // Timeout para evitar carga infinita
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeoutReached(true);
+    }, 10000); // 10 segundos timeout
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Mostrar loading mientras se verifica la autenticación
-  if (isLoading) {
+  if (isLoading && !timeoutReached) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-neon-mint border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-light font-space text-sm">Verificando acceso...</p>
+          <p className="text-gray-400 font-space text-xs mt-2">
+            Si esto tarda mucho, recarga la página
+          </p>
         </div>
       </div>
     );
+  }
+
+  // Si se alcanzó el timeout y aún está cargando, asumir que no está autenticado
+  if (timeoutReached && isLoading) {
+    console.warn('Auth timeout reached, redirecting to login');
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Si no está autenticado, redirigir al login

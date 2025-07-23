@@ -15,11 +15,18 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  const { login, register, resetPassword, isLoading } = useAuth();
+  const { login, register, resetPassword, resetAuthState, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   const from = location.state?.from?.pathname || '/admin';
+
+  const handleResetAuth = () => {
+    resetAuthState();
+    setError('');
+    setSuccess('Estado de autenticación reseteado');
+    setTimeout(() => setSuccess(''), 3000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -301,6 +308,13 @@ const Login: React.FC = () => {
               <p className="text-gray-light font-space text-xs mb-2">
                 Para probar la aplicación, puedes registrarte o contactar al administrador para obtener credenciales.
               </p>
+              <button
+                type="button"
+                onClick={handleResetAuth}
+                className="mt-2 text-xs text-neon-mint hover:text-white transition-colors"
+              >
+                🔄 Resetear estado de autenticación
+              </button>
             </div>
           )}
         </div>

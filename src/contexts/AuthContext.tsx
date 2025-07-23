@@ -19,6 +19,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetAuthState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,11 +30,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Obtener sesión inicial
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Timeout para evitar carga infinita
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session timeout')), 8000)
+        );
+
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
         
+        if (!mounted) return;
+
         if (error) {
           console.error('Error getting session:', error);
           setIsLoading(false);
@@ -44,19 +58,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (session?.user) {
           await fetchUserProfile(session.user);
+        } else {
+          setUser(null);
         }
-      } catch (error) {
-        console.error('Error in getInitialSession:', error);
-      } finally {
+        
         setIsLoading(false);
+      } catch (error) {
+        console.error('Error in initializeAuth:', error);
+        if (mounted) {
+          setUser(null);
+          setSession(null);
+          setIsLoading(false);
+        }
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, session);
         setSession(session);
         
@@ -66,11 +89,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(null);
         }
         
-        setIsLoading(false);
+        // Solo cambiar loading si no estamos ya cargando
+        if (isLoading) {
+          setIsLoading(false);
+        }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -107,6 +134,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           if (createError) {
             console.error('Error creating user profile:', createError);
+            // Crear usuario básico si falla la creación del perfil
+            setUser({
+              id: supabaseUser.id,
+              email: supabaseUser.email || '',
+              name: supabaseUser.email?.split('@')[0] || 'usuario',
+              role: 'redactor'
+            });
             return;
           }
 
@@ -116,6 +150,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             name: createdProfile.username,
             role: createdProfile.role as 'admin' | 'editor' | 'redactor',
             avatar: createdProfile.avatar_url
+          });
+        } else {
+          // Si hay otro error, crear usuario básico
+          setUser({
+            id: supabaseUser.id,
+            email: supabaseUser.email || '',
+            name: supabaseUser.email?.split('@')[0] || 'usuario',
+            role: 'redactor'
           });
         }
         return;
@@ -130,6 +172,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      // En caso de error, crear usuario básico para no bloquear la app
+      setUser({
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: supabaseUser.email?.split('@')[0] || 'usuario',
+        role: 'redactor'
+      });
     }
   };
 
@@ -238,6 +287,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const resetAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setIsLoading(false);
+    // Limpiar cualquier sesión almacenada
+    supabase.auth.signOut();
+  };
+
   const getAuthErrorMessage = (errorMessage: string): string => {
     const errorMap: { [key: string]: string } = {
       'Invalid login credentials': 'Credenciales de acceso inválidas',
@@ -260,7 +317,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     register,
-    resetPassword
+    resetPassword,
+    resetAuthState
   };
 
   return (

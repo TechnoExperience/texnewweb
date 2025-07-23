@@ -271,6 +271,7 @@ export const navigationItems = [
   { id: 'articles', label: 'ARTÍCULOS', path: '/articulos', color: '#8A2BE2' },
   { id: 'archive', label: 'ARCHIVO', path: '/archivo', color: '#0066FF' },
   { id: 'artists', label: 'ARTISTAS', path: '/artistas', color: '#00FF00' },
+  { id: 'music', label: 'MÚSICA', path: '/musica', color: '#FF1493' },
   { id: 'about', label: 'NOSOTROS', path: '/nosotros', color: '#F2FF00' },
   { id: 'contact', label: 'CONTACTO', path: '/contacto', color: '#FF8C00' }
 ];
