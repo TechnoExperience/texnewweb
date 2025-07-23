@@ -3,10 +3,12 @@ import { Search, Filter, Calendar, MapPin, Users, Grid, List, Map } from 'lucide
 import EventCard from '../components/ui/EventCard';
 import EventCalendar from '../components/ui/EventCalendar';
 import EventMap from '../components/ui/EventMap';
+import useSupabase from '../hooks/useSupabase';
 import DataManager from '../utils/dataManager';
 import { Event } from '../data/types';
 
 const Events: React.FC = () => {
+  const { events: supabaseEvents, eventsLoading, fetchEvents } = useSupabase();
   const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -17,9 +19,48 @@ const Events: React.FC = () => {
 
   // Cargar eventos al montar el componente
   useEffect(() => {
-    const loadedEvents = DataManager.getEvents();
-    setEvents(loadedEvents);
-  }, []);
+    const loadEvents = async () => {
+      // Intentar cargar desde Supabase primero
+      try {
+        await fetchEvents();
+        
+        // Si hay eventos de Supabase, usarlos
+        if (supabaseEvents.length > 0) {
+          // Mapear eventos de Supabase al formato local
+          const mappedEvents: Event[] = supabaseEvents.map(event => ({
+            id: event.id,
+            title: event.title,
+            date: event.date,
+            time: event.time,
+            venue: event.location,
+            city: event.location.split(',')[1]?.trim() || 'Unknown',
+            category: event.genre || 'Electronic',
+            image: event.image_url || '/images/techno-party-neon.jpg',
+            description: event.description || '',
+            artists: [{ name: 'TBA', genre: event.genre || 'Electronic' }],
+            tickets: {
+              price: event.price || 25,
+              available: event.capacity || 500,
+              total: event.capacity || 500,
+              url: '#'
+            }
+          }));
+          setEvents(mappedEvents);
+        } else {
+          // Si no hay eventos en Supabase, usar datos mock
+          const loadedEvents = DataManager.getEvents();
+          setEvents(loadedEvents);
+        }
+      } catch (error) {
+        console.error('Error loading events from Supabase:', error);
+        // Fallback a datos locales
+        const loadedEvents = DataManager.getEvents();
+        setEvents(loadedEvents);
+      }
+    };
+
+    loadEvents();
+  }, [supabaseEvents]);
 
   // Get unique cities and categories for filters
   const cities = Array.from(new Set(events.map(event => event.city)));
