@@ -173,7 +173,7 @@ const GlobalMusicPlayer: React.FC<GlobalMusicPlayerProps> = ({ isVisible, onClos
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-darkest border-t border-gray-600 z-50">
-      <audio ref={audioRef} volume={volume} />
+      <audio ref={audioRef} />
       
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">

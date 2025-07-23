@@ -44,7 +44,7 @@ const Artists: React.FC = () => {
                          artist.bio?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesGenre = selectedGenre === 'all' || 
-                        artist.genres?.some(genre => 
+                        artist.genre?.some(genre => 
                           genre.toLowerCase().includes(selectedGenre.toLowerCase())
                         );
     
@@ -67,7 +67,7 @@ const Artists: React.FC = () => {
   // Obtener géneros únicos
   const uniqueGenres = Array.from(
     new Set(
-      artists.flatMap(artist => artist.genres || [])
+      artists.flatMap(artist => artist.genre || [])
     )
   ).sort();
 
@@ -190,7 +190,7 @@ const Artists: React.FC = () => {
         </div>
 
         {/* Featured Artists */}
-        {filteredArtists.some(artist => artist.featured) && (
+        {filteredArtists.some(artist => artist.verified) && (
           <div className="mb-12">
             <h2 className="font-bebas text-3xl text-white mb-6 tracking-wider flex items-center">
               <Heart className="w-6 h-6 mr-2 text-neon-pink" />
@@ -198,7 +198,7 @@ const Artists: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredArtists
-                .filter(artist => artist.featured)
+                .filter(artist => artist.verified)
                 .slice(0, 3)
                 .map(artist => (
                   <FeaturedArtistCard 
@@ -297,7 +297,7 @@ const FeaturedArtistCard: React.FC<{
 
         {/* Genres */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {artist.genres?.slice(0, 2).map((genre, index) => (
+          {artist.genre?.slice(0, 2).map((genre, index) => (
             <span
               key={index}
               className="px-2 py-1 bg-gray-dark text-gray-light font-space text-xs border border-gray-600"
@@ -389,10 +389,10 @@ const ArtistCard: React.FC<{
         </p>
 
         {/* Primary Genre */}
-        {artist.genres && artist.genres.length > 0 && (
+        {artist.genre && artist.genre.length > 0 && (
           <div className="mb-3">
             <span className="px-2 py-1 bg-gray-dark text-gray-light font-space text-xs border border-gray-600">
-              {artist.genres[0]}
+              {artist.genre[0]}
             </span>
           </div>
         )}
