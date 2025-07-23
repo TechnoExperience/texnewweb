@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Home from './pages/Home';
 import Events from './pages/Events';
+import EventDetail from './pages/EventDetail';
 import Articles from './pages/Articles';
 import Archive from './pages/Archive';
 import Artists from './pages/Artists';
@@ -25,9 +26,12 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="/eventos" element={<Events />} />
+            <Route path="/eventos/:id" element={<EventDetail />} />
             <Route path="/articulos" element={<Articles />} />
+            <Route path="/articulos/:id" element={<Articles />} /> {/* TODO: ArticleDetail */}
             <Route path="/archivo" element={<Archive />} />
             <Route path="/artistas" element={<Artists />} />
+            <Route path="/artistas/:id" element={<Artists />} /> {/* TODO: ArtistDetail */}
             <Route path="/nosotros" element={<About />} />
             <Route path="/contacto" element={<Contact />} />
             
