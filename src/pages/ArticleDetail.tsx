@@ -19,13 +19,12 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import QuickLoader from '../components/ui/QuickLoader';
 import { Article, Comment } from '../lib/supabase';
 
 const ArticleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { supabase } = useSupabase();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);

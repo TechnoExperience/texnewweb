@@ -17,13 +17,12 @@ import {
   User,
   Building
 } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import QuickLoader from '../components/ui/QuickLoader';
 import { Event } from '../lib/supabase';
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { supabase } = useSupabase();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -39,20 +38,28 @@ const EventDetail: React.FC = () => {
   const fetchEventDetail = async (eventId: string) => {
     setLoading(true);
     try {
+      console.log('Buscando evento con ID:', eventId);
+      
       // Query simplificada - solo campos básicos del evento
       const { data, error } = await supabase
         .from('events')
-        .select(`
-          *
-        `)
+        .select('*')
         .eq('id', eventId)
         .single();
+
+      console.log('Resultado de la consulta:', { data, error });
 
       if (error) {
         console.error('Error fetching event:', error);
         return;
       }
 
+      if (!data) {
+        console.error('No se encontró evento con ID:', eventId);
+        return;
+      }
+
+      console.log('Evento encontrado:', data);
       setEvent(data);
     } catch (error) {
       console.error('Error fetching event:', error);

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Users, Play, Instagram, Music, MapPin, ExternalLink, Loader2, Heart, Verified } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import type { Artist } from '../lib/supabase';
 
 const Artists: React.FC = () => {
-  const { supabase } = useSupabase();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

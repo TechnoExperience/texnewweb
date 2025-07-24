@@ -18,13 +18,12 @@ import {
   Volume2,
   Download
 } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import QuickLoader from '../components/ui/QuickLoader';
 import { Artist, Track, Event } from '../lib/supabase';
 
 const ArtistDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { supabase } = useSupabase();
   const [artist, setArtist] = useState<Artist | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [events, setEvents] = useState<Event[]>([]);

@@ -30,7 +30,7 @@ import {
   Ban,
   UnlockKeyhole
 } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ui/ImageUpload';
 import AudioUpload from '../components/ui/AudioUpload';
@@ -39,7 +39,6 @@ import type { Event, Artist, Article, Venue, MusicTrack, UserProfile } from '../
 
 const Admin: React.FC = () => {
   const { user } = useAuth();
-  const { supabase } = useSupabase();
 
   // Estados para las diferentes secciones
   const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'artists' | 'articles' | 'venues' | 'music' | 'users'>('dashboard');

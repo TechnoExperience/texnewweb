@@ -74,7 +74,7 @@ export const createSampleEvents = async () => {
     const events = [
       {
         title: 'TECHNO UNDERGROUND NIGHT',
-        description: 'Una noche épica de techno underground con los mejores DJs nacionales',
+        description: 'Una noche épica de techno underground con los mejores DJs nacionales. El lineup incluye a los más destacados artistas de la escena techno española, con un sound system de última generación y visuales impresionantes.',
         date: '2025-02-15',
         time: '23:00:00',
         location: 'Industrial Copera, Madrid',
@@ -86,7 +86,7 @@ export const createSampleEvents = async () => {
       },
       {
         title: 'WAREHOUSE PARTY',
-        description: 'Fiesta en nave industrial con sound system de primer nivel',
+        description: 'Fiesta en nave industrial con sound system de primer nivel. Una experiencia inmersiva en un espacio industrial único, donde el techno más puro resuena entre estructuras de hormigón y acero.',
         date: '2025-02-22',
         time: '22:00:00',
         location: 'Warehouse District, Barcelona',
@@ -94,6 +94,42 @@ export const createSampleEvents = async () => {
         price: 30,
         capacity: 800,
         genre: 'Electronic',
+        featured: false
+      },
+      {
+        title: 'MINIMAL SESSIONS MADRID',
+        description: 'Una sesión íntima de techno minimal en uno de los clubs más exclusivos de Madrid. Enfoque en la calidad del sonido y la experiencia musical más pura.',
+        date: '2025-03-01',
+        time: '00:00:00',
+        location: 'Club Moog, Madrid',
+        image_url: 'https://images.unsplash.com/photo-1571266028243-d220c0ecf99b?w=800',
+        price: 20,
+        capacity: 300,
+        genre: 'Minimal',
+        featured: true
+      },
+      {
+        title: 'UNDERGROUND FESTIVAL 2025',
+        description: 'El festival de techno underground más esperado del año. Dos días de música ininterrumpida con los mejores artistas internacionales y nacionales en múltiples escenarios.',
+        date: '2025-03-15',
+        time: '18:00:00',
+        location: 'Recinto Ferial, Valencia',
+        image_url: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
+        price: 75,
+        capacity: 5000,
+        genre: 'Techno',
+        featured: true
+      },
+      {
+        title: 'PROGRESSIVE NIGHT',
+        description: 'Una noche dedicada al progressive techno y house, con artistas que llevarán tu mente a otro nivel con melodías envolventes y beats hipnóticos.',
+        date: '2025-03-08',
+        time: '23:30:00',
+        location: 'Pacha, Ibiza',
+        image_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
+        price: 45,
+        capacity: 600,
+        genre: 'Progressive',
         featured: false
       }
     ];

@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, BookOpen, Grid, List, Tag, Calendar, User, Eye, Clock } from 'lucide-react';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import QuickLoader from '../components/ui/QuickLoader';
 import type { Article } from '../lib/supabase';
 
 const Articles: React.FC = () => {
-  const { supabase } = useSupabase();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
