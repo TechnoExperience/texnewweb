@@ -28,13 +28,15 @@ import {
   Pause,
   Volume2,
   Ban,
-  UnlockKeyhole
+  UnlockKeyhole,
+  Search
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ui/ImageUpload';
 import AudioUpload from '../components/ui/AudioUpload';
 import { createSampleArticles, createSampleEvents } from '../utils/createSampleData';
+import { checkDatabaseStatus, clearAndRecreateData, getEventById } from '../utils/databaseCheck';
 import type { Event, Artist, Article, Venue, MusicTrack, UserProfile } from '../data/types';
 
 const Admin: React.FC = () => {
@@ -76,6 +78,8 @@ const Admin: React.FC = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [creatingData, setCreatingData] = useState(false);
+  const [checkingDb, setCheckingDb] = useState(false);
+  const [recreatingData, setRecreatingData] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -215,6 +219,59 @@ const Admin: React.FC = () => {
       alert('Error al crear datos de muestra');
     } finally {
       setCreatingData(false);
+    }
+  };
+
+  const handleCheckDatabase = async () => {
+    setCheckingDb(true);
+    try {
+      const status = await checkDatabaseStatus();
+      if (status) {
+        alert(`Base de datos verificada:\n- Eventos: ${status.events}\n- Artículos: ${status.articles}\n- Artistas: ${status.artists}\n\nRevisa la consola para más detalles.`);
+      } else {
+        alert('Error verificando la base de datos. Revisa la consola.');
+      }
+    } catch (error) {
+      console.error('Error checking database:', error);
+      alert('Error verificando la base de datos');
+    } finally {
+      setCheckingDb(false);
+    }
+  };
+
+  const handleRecreateData = async () => {
+    if (!confirm('⚠️ Esto eliminará TODOS los datos existentes y creará nuevos datos de muestra. ¿Estás seguro?')) {
+      return;
+    }
+    
+    setRecreatingData(true);
+    try {
+      const success = await clearAndRecreateData();
+      if (success) {
+        alert('✅ Datos recreados exitosamente');
+        // Recargar datos
+        await loadData();
+        await loadStats();
+      } else {
+        alert('❌ Error recreando datos');
+      }
+    } catch (error) {
+      console.error('Error recreating data:', error);
+      alert('Error recreando datos');
+    } finally {
+      setRecreatingData(false);
+    }
+  };
+
+  const handleTestEventById = async () => {
+    const eventId = prompt('Ingresa el ID del evento a buscar (ej: 3):');
+    if (eventId) {
+      const event = await getEventById(eventId);
+      if (event) {
+        alert(`✅ Evento encontrado: ${event.title}\nRevisa la consola para más detalles.`);
+      } else {
+        alert(`❌ No se encontró evento con ID: ${eventId}`);
+      }
     }
   };
 
@@ -443,26 +500,77 @@ const Admin: React.FC = () => {
       {/* Acciones rápidas */}
       <div className="bg-gray-dark p-6 brutal-border border-gray-600">
         <h3 className="text-white font-space text-lg mb-4">Acciones Rápidas</h3>
-        <button
-          onClick={handleCreateSampleData}
-          disabled={creatingData}
-          className="bg-neon-cyan text-black px-6 py-3 font-space font-bold hover:bg-neon-mint transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {creatingData ? (
-            <>
-              <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-              Creando datos...
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4 inline mr-2" />
-              Crear Datos de Muestra
-            </>
-          )}
-        </button>
-        <p className="text-gray-light font-space text-sm mt-2">
-          Crea artículos y eventos de ejemplo para probar la aplicación
-        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={handleCreateSampleData}
+            disabled={creatingData}
+            className="bg-neon-cyan text-black px-6 py-3 font-space font-bold hover:bg-neon-mint transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {creatingData ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Creando datos...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 inline mr-2" />
+                Crear Datos de Muestra
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleCheckDatabase}
+            disabled={checkingDb}
+            className="bg-neon-yellow text-black px-6 py-3 font-space font-bold hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {checkingDb ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 inline mr-2" />
+                Verificar Base de Datos
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleRecreateData}
+            disabled={recreatingData}
+            className="bg-red-500 text-white px-6 py-3 font-space font-bold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {recreatingData ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Recreando...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4 inline mr-2" />
+                Recrear Todos los Datos
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleTestEventById}
+            className="bg-neon-pink text-black px-6 py-3 font-space font-bold hover:bg-pink-400 transition-colors"
+          >
+            <Search className="w-4 h-4 inline mr-2" />
+            Buscar Evento por ID
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-2 text-gray-light font-space text-sm">
+          <p><strong>Crear Datos de Muestra:</strong> Añade eventos y artículos de ejemplo</p>
+          <p><strong>Verificar BD:</strong> Revisa qué datos hay en la base de datos</p>
+          <p><strong>Recrear Datos:</strong> ⚠️ Elimina todo y crea datos nuevos</p>
+          <p><strong>Buscar por ID:</strong> Prueba si un evento específico existe</p>
+        </div>
       </div>
     </div>
   );
