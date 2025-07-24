@@ -52,7 +52,7 @@ const Articles: React.FC = () => {
     let filtered = articles.filter(article => {
       const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            article.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           article.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           article.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            article.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
@@ -65,8 +65,8 @@ const Articles: React.FC = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          const dateA = new Date(a.published || a.created_at);
-          const dateB = new Date(b.published || b.created_at);
+          const dateA = new Date(a.published_at || a.created_at);
+          const dateB = new Date(b.published_at || b.created_at);
           return dateB.getTime() - dateA.getTime(); // Newest first
         case 'title':
           return a.title.localeCompare(b.title);
@@ -335,9 +335,9 @@ const FeaturedArticleCard: React.FC<{
           {article.title}
         </h3>
         
-        {article.description && (
+        {article.excerpt && (
           <p className="text-gray-light font-space text-sm mb-4 line-clamp-2">
-            {article.description}
+            {article.excerpt}
           </p>
         )}
 
@@ -345,7 +345,7 @@ const FeaturedArticleCard: React.FC<{
         <div className="flex items-center space-x-4 text-gray-light font-space text-xs mb-4">
           <div className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{formatDate(article.published || article.created_at)}</span>
+            <span>{formatDate(article.published_at || article.created_at)}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="w-3 h-3" />
@@ -416,7 +416,7 @@ const ArticleGridCard: React.FC<{
         {/* Meta */}
         <div className="flex items-center justify-between text-gray-light font-space text-xs">
           <div className="flex items-center space-x-2">
-            <span>{formatDate(article.published || article.created_at)}</span>
+            <span>{formatDate(article.published_at || article.created_at)}</span>
             <span>•</span>
             <span>{getReadingTime(article.content, article.reading_time)} min</span>
           </div>
@@ -471,7 +471,7 @@ const ArticleListCard: React.FC<{
         <div className="flex items-center space-x-4 text-gray-light font-space text-xs mb-3">
           <div className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{formatDate(article.published || article.created_at)}</span>
+            <span>{formatDate(article.published_at || article.created_at)}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="w-3 h-3" />
