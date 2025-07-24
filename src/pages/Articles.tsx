@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, BookOpen, Grid, List, Tag, Loader2, Calendar, User, Eye, Clock } from 'lucide-react';
+import { Search, Filter, BookOpen, Grid, List, Tag, Calendar, User, Eye, Clock } from 'lucide-react';
 import useSupabase from '../hooks/useSupabase';
+import QuickLoader from '../components/ui/QuickLoader';
 import type { Article } from '../lib/supabase';
 
 const Articles: React.FC = () => {
@@ -21,14 +22,26 @@ const Articles: React.FC = () => {
   const fetchArticles = async () => {
     setLoading(true);
     try {
+      // Query optimizada - solo campos necesarios
       const { data, error } = await supabase
         .from('articles')
         .select(`
-          *,
-          author:user_profiles(*)
+          id,
+          title,
+          excerpt,
+          image_url,
+          category,
+          tags,
+          featured,
+          reading_time,
+          views_count,
+          likes_count,
+          created_at,
+          published_at
         `)
         .eq('published', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50); // Limitar resultados para mejor rendimiento
 
       if (error) {
         console.error('Error fetching articles:', error);
@@ -109,10 +122,9 @@ const Articles: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-neon-mint animate-spin mx-auto mb-4" />
-          <div className="text-white font-bebas text-2xl">CARGANDO ARTÍCULOS...</div>
+      <div className="min-h-screen bg-black pt-24">
+        <div className="container mx-auto px-4">
+          <QuickLoader message="Cargando artículos..." size="lg" />
         </div>
       </div>
     );

@@ -7,13 +7,15 @@ import Footer from '../components/common/Footer';
 const MainLayout: React.FC = () => {
   const { isLoading } = useAuth();
 
-  // Mostrar loading inicial solo por un momento muy corto
+  // Mostrar loading minimal para mejor UX
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-neon-mint border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-gray-light font-space text-xs">Cargando...</p>
+      <div className="min-h-screen bg-black">
+        <div className="w-full h-1 bg-gray-800">
+          <div className="h-full bg-neon-mint animate-pulse"></div>
+        </div>
+        <div className="flex items-center justify-center pt-24">
+          <div className="w-6 h-6 border-2 border-neon-mint border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );

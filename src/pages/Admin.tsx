@@ -161,30 +161,24 @@ const Admin: React.FC = () => {
 
   const loadStats = async () => {
     try {
+      // Cargar estadísticas solo cuando se necesiten (dashboard activo)
+      if (activeTab !== 'dashboard') return;
+      
       const [
         { count: eventsCount },
         { count: artistsCount },
         { count: articlesCount },
         { count: venuesCount },
         { count: musicCount },
-        { count: usersCount },
-        { count: activeUsersCount }
+        { count: usersCount }
       ] = await Promise.all([
-        supabase.from('events').select('*', { count: 'exact', head: true }),
-        supabase.from('artists').select('*', { count: 'exact', head: true }),
-        supabase.from('articles').select('*', { count: 'exact', head: true }),
-        supabase.from('venues').select('*', { count: 'exact', head: true }),
-        supabase.from('music_tracks').select('*', { count: 'exact', head: true }),
-        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('is_active', true)
+        supabase.from('events').select('id', { count: 'exact', head: true }),
+        supabase.from('artists').select('id', { count: 'exact', head: true }),
+        supabase.from('articles').select('id', { count: 'exact', head: true }),
+        supabase.from('venues').select('id', { count: 'exact', head: true }),
+        supabase.from('music_tracks').select('id', { count: 'exact', head: true }),
+        supabase.from('user_profiles').select('id', { count: 'exact', head: true })
       ]);
-
-      // Obtener total de reproducciones
-      const { data: playsData } = await supabase
-        .from('music_tracks')
-        .select('play_count');
-      
-      const totalPlays = playsData?.reduce((sum, track) => sum + (track.play_count || 0), 0) || 0;
 
       setStats({
         events: eventsCount || 0,
@@ -193,8 +187,8 @@ const Admin: React.FC = () => {
         venues: venuesCount || 0,
         music: musicCount || 0,
         users: usersCount || 0,
-        activeUsers: activeUsersCount || 0,
-        totalPlays
+        activeUsers: 0, // Calcular solo si se necesita
+        totalPlays: 0  // Calcular solo si se necesita
       });
     } catch (error) {
       console.error('Error loading stats:', error);

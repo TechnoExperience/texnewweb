@@ -35,10 +35,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Obtener sesión inicial
     const initializeAuth = async () => {
       try {
-        // Timeout más largo para evitar carga infinita
+        // Timeout reducido para mejorar rendimiento
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session timeout')), 15000)
+          setTimeout(() => reject(new Error('Session timeout')), 5000)
         );
 
         let sessionResult;
@@ -48,8 +48,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             timeoutPromise
           ]) as any;
         } catch (timeoutError) {
-          console.warn('Session initialization timeout, continuing with auth listener:', timeoutError);
-          // En caso de timeout, seguir con el loading false pero mantener el listener activo
+          console.warn('Session timeout, using auth listener');
+          // En caso de timeout, continuar sin bloquear
           if (mounted) {
             setIsLoading(false);
           }
@@ -69,6 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSession(session);
         
         if (session?.user) {
+          // Obtener perfil de forma más rápida
           await fetchUserProfile(session.user);
         } else {
           setUser(null);

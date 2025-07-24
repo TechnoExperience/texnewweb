@@ -20,14 +20,25 @@ const Music: React.FC = () => {
   const loadTracks = async () => {
     try {
       setLoading(true);
+      // Query optimizada - solo campos necesarios
       const { data, error } = await supabase
         .from('music_tracks')
         .select(`
-          *,
+          id,
+          title,
+          album,
+          genre,
+          duration,
+          file_url,
+          cover_image_url,
+          play_count,
+          is_featured,
+          created_at,
           artist:artists(name, id)
         `)
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100); // Limitar para mejor rendimiento
 
       if (error) {
         console.error('Error loading tracks:', error);
