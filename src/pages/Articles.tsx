@@ -64,7 +64,6 @@ const Articles: React.FC = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles.filter(article => {
       const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           article.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            article.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            article.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
       
@@ -113,11 +112,8 @@ const Articles: React.FC = () => {
     });
   };
 
-  const getReadingTime = (content: string, readingTime?: number) => {
-    if (readingTime) return readingTime;
-    const wordsPerMinute = 200;
-    const words = content.split(' ').length;
-    return Math.ceil(words / wordsPerMinute);
+  const getReadingTime = (readingTime?: number) => {
+    return readingTime || 5; // Valor por defecto si no hay reading_time
   };
 
   if (loading) {
@@ -361,7 +357,7 @@ const FeaturedArticleCard: React.FC<{
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="w-3 h-3" />
-            <span>{getReadingTime(article.content, article.reading_time)} min</span>
+            <span>{getReadingTime(article.reading_time)} min</span>
           </div>
           <div className="flex items-center space-x-1">
             <Eye className="w-3 h-3" />
@@ -392,7 +388,7 @@ const ArticleGridCard: React.FC<{
   article: Article;
   getCategoryColor: (category: string) => string;
   formatDate: (date: string) => string;
-  getReadingTime: (content: string, readingTime?: number) => number;
+  getReadingTime: (readingTime?: number) => number;
 }> = ({ article, getCategoryColor, formatDate, getReadingTime }) => (
   <Link to={`/articulos/${article.id}`} className="group">
     <div className="bg-gray-dark bg-opacity-30 brutal-border border-gray-dark overflow-hidden hover:border-neon-mint transition-colors">
@@ -430,7 +426,7 @@ const ArticleGridCard: React.FC<{
           <div className="flex items-center space-x-2">
             <span>{formatDate(article.published_at || article.created_at)}</span>
             <span>•</span>
-            <span>{getReadingTime(article.content, article.reading_time)} min</span>
+            <span>{getReadingTime(article.reading_time)} min</span>
           </div>
           <div className="flex items-center space-x-1">
             <Eye className="w-3 h-3" />
@@ -447,7 +443,7 @@ const ArticleListCard: React.FC<{
   article: Article;
   getCategoryColor: (category: string) => string;
   formatDate: (date: string) => string;
-  getReadingTime: (content: string, readingTime?: number) => number;
+  getReadingTime: (readingTime?: number) => number;
 }> = ({ article, getCategoryColor, formatDate, getReadingTime }) => (
   <Link to={`/articulos/${article.id}`} className="group">
     <div className="bg-gray-dark bg-opacity-30 brutal-border border-gray-dark p-6 hover:border-neon-mint transition-colors flex items-center space-x-6">
@@ -487,7 +483,7 @@ const ArticleListCard: React.FC<{
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="w-3 h-3" />
-            <span>{getReadingTime(article.content, article.reading_time)} min</span>
+            <span>{getReadingTime(article.reading_time)} min</span>
           </div>
           <div className="flex items-center space-x-1">
             <Eye className="w-3 h-3" />

@@ -34,6 +34,7 @@ import useSupabase from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ui/ImageUpload';
 import AudioUpload from '../components/ui/AudioUpload';
+import { createSampleArticles, createSampleEvents } from '../utils/createSampleData';
 import type { Event, Artist, Article, Venue, MusicTrack, UserProfile } from '../data/types';
 
 const Admin: React.FC = () => {
@@ -75,6 +76,7 @@ const Admin: React.FC = () => {
   // Estados para usuarios
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [creatingData, setCreatingData] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -192,6 +194,28 @@ const Admin: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+    }
+  };
+
+  const handleCreateSampleData = async () => {
+    setCreatingData(true);
+    try {
+      const articlesSuccess = await createSampleArticles();
+      const eventsSuccess = await createSampleEvents();
+      
+      if (articlesSuccess && eventsSuccess) {
+        alert('Datos de muestra creados exitosamente');
+        // Recargar datos
+        await loadData();
+        await loadStats();
+      } else {
+        alert('Error al crear algunos datos de muestra');
+      }
+    } catch (error) {
+      console.error('Error creating sample data:', error);
+      alert('Error al crear datos de muestra');
+    } finally {
+      setCreatingData(false);
     }
   };
 
@@ -415,6 +439,31 @@ const Admin: React.FC = () => {
           <h3 className="text-white font-space text-lg mb-4">Artículos</h3>
           <p className="text-3xl font-bold text-neon-pink">{stats.articles}</p>
         </div>
+      </div>
+
+      {/* Acciones rápidas */}
+      <div className="bg-gray-dark p-6 brutal-border border-gray-600">
+        <h3 className="text-white font-space text-lg mb-4">Acciones Rápidas</h3>
+        <button
+          onClick={handleCreateSampleData}
+          disabled={creatingData}
+          className="bg-neon-cyan text-black px-6 py-3 font-space font-bold hover:bg-neon-mint transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {creatingData ? (
+            <>
+              <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+              Creando datos...
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4 inline mr-2" />
+              Crear Datos de Muestra
+            </>
+          )}
+        </button>
+        <p className="text-gray-light font-space text-sm mt-2">
+          Crea artículos y eventos de ejemplo para probar la aplicación
+        </p>
       </div>
     </div>
   );
