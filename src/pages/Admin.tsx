@@ -37,6 +37,7 @@ import ImageUpload from '../components/ui/ImageUpload';
 import AudioUpload from '../components/ui/AudioUpload';
 import { createSampleArticles, createSampleEvents } from '../utils/createSampleData';
 import { checkDatabaseStatus, clearAndRecreateData, getEventById } from '../utils/databaseCheck';
+import { checkTablesExist, createBasicTables, setupRowLevelSecurity } from '../utils/setupDatabase';
 import type { Event, Artist, Article, Venue, MusicTrack, UserProfile } from '../data/types';
 
 const Admin: React.FC = () => {
@@ -80,6 +81,8 @@ const Admin: React.FC = () => {
   const [creatingData, setCreatingData] = useState(false);
   const [checkingDb, setCheckingDb] = useState(false);
   const [recreatingData, setRecreatingData] = useState(false);
+  const [checkingTables, setCheckingTables] = useState(false);
+  const [creatingSql, setCreatingSql] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -272,6 +275,55 @@ const Admin: React.FC = () => {
       } else {
         alert(`❌ No se encontró evento con ID: ${eventId}`);
       }
+    }
+  };
+
+  const handleCheckTables = async () => {
+    setCheckingTables(true);
+    try {
+      const results = await checkTablesExist();
+      if (results) {
+        const existingTables = Object.entries(results)
+          .filter(([_, exists]) => exists)
+          .map(([table, _]) => table);
+        
+        const missingTables = Object.entries(results)
+          .filter(([_, exists]) => !exists)
+          .map(([table, _]) => table);
+        
+        let message = '📊 Estado de las tablas:\n\n';
+        if (existingTables.length > 0) {
+          message += `✅ Tablas existentes:\n${existingTables.join(', ')}\n\n`;
+        }
+        if (missingTables.length > 0) {
+          message += `❌ Tablas faltantes:\n${missingTables.join(', ')}\n\n`;
+          message += 'Usa "Generar Scripts SQL" para crear las tablas faltantes.';
+        } else {
+          message += '🎉 ¡Todas las tablas existen!';
+        }
+        
+        alert(message);
+      }
+    } catch (error) {
+      console.error('Error checking tables:', error);
+      alert('Error verificando tablas. Revisa la consola.');
+    } finally {
+      setCheckingTables(false);
+    }
+  };
+
+  const handleGenerateSql = async () => {
+    setCreatingSql(true);
+    try {
+      const result = await createBasicTables();
+      const rlsPolicies = setupRowLevelSecurity();
+      
+      alert(`📋 Scripts SQL generados en la consola.\n\n${result.message}\n\nRevisa la consola del navegador para copiar los comandos SQL.`);
+    } catch (error) {
+      console.error('Error generating SQL:', error);
+      alert('Error generando scripts SQL');
+    } finally {
+      setCreatingSql(false);
     }
   };
 
@@ -501,7 +553,61 @@ const Admin: React.FC = () => {
       <div className="bg-gray-dark p-6 brutal-border border-gray-600">
         <h3 className="text-white font-space text-lg mb-4">Acciones Rápidas</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <button
+            onClick={handleCheckTables}
+            disabled={checkingTables}
+            className="bg-blue-500 text-white px-6 py-3 font-space font-bold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {checkingTables ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <Settings className="w-4 h-4 inline mr-2" />
+                Verificar Tablas
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleGenerateSql}
+            disabled={creatingSql}
+            className="bg-purple-500 text-white px-6 py-3 font-space font-bold hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {creatingSql ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 inline mr-2" />
+                Generar Scripts SQL
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleCheckDatabase}
+            disabled={checkingDb}
+            className="bg-neon-yellow text-black px-6 py-3 font-space font-bold hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {checkingDb ? (
+              <>
+                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 inline mr-2" />
+                Verificar Datos
+              </>
+            )}
+          </button>
+
           <button
             onClick={handleCreateSampleData}
             disabled={creatingData}
@@ -521,21 +627,11 @@ const Admin: React.FC = () => {
           </button>
 
           <button
-            onClick={handleCheckDatabase}
-            disabled={checkingDb}
-            className="bg-neon-yellow text-black px-6 py-3 font-space font-bold hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleTestEventById}
+            className="bg-neon-pink text-black px-6 py-3 font-space font-bold hover:bg-pink-400 transition-colors"
           >
-            {checkingDb ? (
-              <>
-                <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
-                Verificando...
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4 inline mr-2" />
-                Verificar Base de Datos
-              </>
-            )}
+            <Search className="w-4 h-4 inline mr-2" />
+            Buscar Evento por ID
           </button>
 
           <button
@@ -555,22 +651,16 @@ const Admin: React.FC = () => {
               </>
             )}
           </button>
-
-          <button
-            onClick={handleTestEventById}
-            className="bg-neon-pink text-black px-6 py-3 font-space font-bold hover:bg-pink-400 transition-colors"
-          >
-            <Search className="w-4 h-4 inline mr-2" />
-            Buscar Evento por ID
-          </button>
         </div>
 
-        <div className="mt-4 space-y-2 text-gray-light font-space text-sm">
-          <p><strong>Crear Datos de Muestra:</strong> Añade eventos y artículos de ejemplo</p>
-          <p><strong>Verificar BD:</strong> Revisa qué datos hay en la base de datos</p>
-          <p><strong>Recrear Datos:</strong> ⚠️ Elimina todo y crea datos nuevos</p>
-          <p><strong>Buscar por ID:</strong> Prueba si un evento específico existe</p>
-        </div>
+                 <div className="mt-4 space-y-2 text-gray-light font-space text-sm">
+           <p><strong>🔧 Verificar Tablas:</strong> Comprueba qué tablas existen en Supabase</p>
+           <p><strong>📋 Generar Scripts SQL:</strong> Crea comandos para configurar la base de datos</p>
+           <p><strong>👁️ Verificar Datos:</strong> Revisa qué datos hay en las tablas</p>
+           <p><strong>➕ Crear Datos de Muestra:</strong> Añade contenido de ejemplo</p>
+           <p><strong>🔍 Buscar por ID:</strong> Prueba si un evento específico existe</p>
+           <p><strong>⚠️ Recrear Datos:</strong> Elimina todo y crea datos nuevos</p>
+         </div>
       </div>
     </div>
   );
