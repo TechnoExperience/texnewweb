@@ -20,6 +20,7 @@ import {
   Check
 } from 'lucide-react';
 import useSupabase from '../hooks/useSupabase';
+import QuickLoader from '../components/ui/QuickLoader';
 import { Article, Comment } from '../lib/supabase';
 
 const ArticleDetail: React.FC = () => {
@@ -220,8 +221,10 @@ const ArticleDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white font-bebas text-2xl">CARGANDO ARTÍCULO...</div>
+      <div className="min-h-screen bg-black pt-24">
+        <div className="container mx-auto px-4">
+          <QuickLoader message="Cargando artículo..." size="lg" />
+        </div>
       </div>
     );
   }

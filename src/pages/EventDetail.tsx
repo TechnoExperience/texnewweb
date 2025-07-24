@@ -18,6 +18,7 @@ import {
   Building
 } from 'lucide-react';
 import useSupabase from '../hooks/useSupabase';
+import QuickLoader from '../components/ui/QuickLoader';
 import { Event } from '../lib/supabase';
 
 const EventDetail: React.FC = () => {
@@ -38,32 +39,11 @@ const EventDetail: React.FC = () => {
   const fetchEventDetail = async (eventId: string) => {
     setLoading(true);
     try {
+      // Query simplificada - solo campos básicos del evento
       const { data, error } = await supabase
         .from('events')
         .select(`
-          *,
-          venue:venues(*),
-          event_artists(
-            performance_order,
-            set_time,
-            set_duration,
-            stage,
-            performance_type,
-            artist:artists(*)
-          ),
-          media_gallery(*),
-          reviews(
-            *,
-            author:user_profiles(*)
-          ),
-          comments(
-            *,
-            author:user_profiles(*),
-            replies:comments(
-              *,
-              author:user_profiles(*)
-            )
-          )
+          *
         `)
         .eq('id', eventId)
         .single();
@@ -127,8 +107,10 @@ const EventDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white font-bebas text-2xl">CARGANDO EVENTO...</div>
+      <div className="min-h-screen bg-black pt-24">
+        <div className="container mx-auto px-4">
+          <QuickLoader message="Cargando evento..." size="lg" />
+        </div>
       </div>
     );
   }
@@ -138,7 +120,7 @@ const EventDetail: React.FC = () => {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-white font-bebas text-4xl mb-4">EVENTO NO ENCONTRADO</h1>
-          <Link to="/events" className="text-neon-mint hover:text-white transition-colors">
+          <Link to="/eventos" className="text-neon-mint hover:text-white transition-colors">
             Volver a eventos
           </Link>
         </div>
@@ -151,7 +133,7 @@ const EventDetail: React.FC = () => {
       {/* Back Button */}
       <div className="container mx-auto px-4 pt-8">
         <Link 
-          to="/events" 
+          to="/eventos" 
           className="inline-flex items-center text-gray-light hover:text-white transition-colors font-space text-sm mb-6"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />

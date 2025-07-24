@@ -19,6 +19,7 @@ import {
   Download
 } from 'lucide-react';
 import useSupabase from '../hooks/useSupabase';
+import QuickLoader from '../components/ui/QuickLoader';
 import { Artist, Track, Event } from '../lib/supabase';
 
 const ArtistDetail: React.FC = () => {
@@ -41,7 +42,7 @@ const ArtistDetail: React.FC = () => {
   const fetchArtistDetail = async (artistId: string) => {
     setLoading(true);
     try {
-      // Fetch artist info
+      // Query simplificada - solo datos básicos del artista
       const { data: artistData, error: artistError } = await supabase
         .from('artists')
         .select('*')
@@ -55,29 +56,9 @@ const ArtistDetail: React.FC = () => {
 
       setArtist(artistData);
 
-      // Fetch artist's tracks
-      const { data: tracksData } = await supabase
-        .from('tracks')
-        .select('*')
-        .eq('artist_id', artistId)
-        .eq('status', 'published')
-        .order('release_date', { ascending: false });
-
-      setTracks(tracksData || []);
-
-      // Fetch artist's upcoming events
-      const { data: eventsData } = await supabase
-        .from('event_artists')
-        .select(`
-          event:events(
-            *,
-            venue:venues(*)
-          )
-        `)
-        .eq('artist_id', artistId)
-        .gte('events.date', new Date().toISOString().split('T')[0]);
-
-      setEvents(eventsData?.map(ea => ea.event).filter(Boolean) || []);
+      // Por ahora no cargar tracks ni eventos hasta que las tablas estén configuradas
+      setTracks([]);
+      setEvents([]);
     } catch (error) {
       console.error('Error fetching artist:', error);
     } finally {
@@ -110,8 +91,10 @@ const ArtistDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white font-bebas text-2xl">CARGANDO ARTISTA...</div>
+      <div className="min-h-screen bg-black pt-24">
+        <div className="container mx-auto px-4">
+          <QuickLoader message="Cargando artista..." size="lg" />
+        </div>
       </div>
     );
   }
@@ -121,7 +104,7 @@ const ArtistDetail: React.FC = () => {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-white font-bebas text-4xl mb-4">ARTISTA NO ENCONTRADO</h1>
-          <Link to="/artists" className="text-neon-mint hover:text-white transition-colors">
+          <Link to="/artistas" className="text-neon-mint hover:text-white transition-colors">
             Volver a artistas
           </Link>
         </div>
