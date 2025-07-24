@@ -343,6 +343,23 @@ const Admin: React.FC = () => {
     user.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const deleteItem = async (table: string, id: string) => {
+    try {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      // Recargar datos después de eliminar
+      loadData();
+    } catch (error: any) {
+      setError(error.message);
+      console.error(`Error deleting from ${table}:`, error);
+    }
+  };
+
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Estadísticas principales */}
@@ -633,6 +650,256 @@ const Admin: React.FC = () => {
     </div>
   );
 
+  const renderEventsSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Eventos</h2>
+        <button
+          onClick={() => {
+            setModalType('event');
+            setEditingItem(null);
+            setShowModal(true);
+          }}
+          className="bg-neon-mint text-black px-4 py-2 font-space font-bold hover:bg-neon-cyan transition-colors"
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Nuevo Evento
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {(data.events || []).map((event) => (
+          <div key={event.id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-white font-space font-bold">{event.title}</h3>
+                                 <p className="text-gray-light text-sm">{event.venue} • {new Date(event.date).toLocaleDateString()}</p>
+                 <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                   <span>Precio: €{event.tickets?.price || 0}</span>
+                   <span className={`px-2 py-1 ${event.featured ? 'bg-yellow-500 text-black' : 'bg-gray-600 text-white'}`}>
+                     {event.featured ? 'DESTACADO' : 'NORMAL'}
+                   </span>
+                 </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingItem(event);
+                    setModalType('event');
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteItem('events', event.id)}
+                  className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderArtistsSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Artistas</h2>
+        <button
+          onClick={() => {
+            setModalType('artist');
+            setEditingItem(null);
+            setShowModal(true);
+          }}
+          className="bg-neon-mint text-black px-4 py-2 font-space font-bold hover:bg-neon-cyan transition-colors"
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Nuevo Artista
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {(data.artists || []).map((artist) => (
+          <div key={artist.id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+                         <div className="flex items-center justify-between">
+               <div className="flex items-center space-x-4 flex-1">
+                 {artist.image && (
+                   <img 
+                     src={artist.image} 
+                     alt={artist.name}
+                     className="w-16 h-16 object-cover brutal-border border-gray-600"
+                   />
+                 )}
+                 <div className="flex-1">
+                   <h3 className="text-white font-space font-bold">{artist.name}</h3>
+                   <p className="text-gray-light text-sm">{artist.genres?.join(', ')}</p>
+                   <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                     <span>{artist.country}</span>
+                     <span className={`px-2 py-1 ${artist.featured ? 'bg-green-500 text-white' : 'bg-gray-600 text-white'}`}>
+                       {artist.featured ? 'DESTACADO' : 'NORMAL'}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingItem(artist);
+                    setModalType('artist');
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteItem('artists', artist.id)}
+                  className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderArticlesSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Artículos</h2>
+        <button
+          onClick={() => {
+            setModalType('article');
+            setEditingItem(null);
+            setShowModal(true);
+          }}
+          className="bg-neon-mint text-black px-4 py-2 font-space font-bold hover:bg-neon-cyan transition-colors"
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Nuevo Artículo
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {(data.articles || []).map((article) => (
+          <div key={article.id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+                         <div className="flex items-center justify-between">
+               <div className="flex items-center space-x-4 flex-1">
+                 {article.image && (
+                   <img 
+                     src={article.image} 
+                     alt={article.title}
+                     className="w-16 h-16 object-cover brutal-border border-gray-600"
+                   />
+                 )}
+                 <div className="flex-1">
+                   <h3 className="text-white font-space font-bold">{article.title}</h3>
+                   <p className="text-gray-light text-sm">{article.excerpt}</p>
+                   <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                     <span>{article.category}</span>
+                     <span>{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'No publicado'}</span>
+                     <span className={`px-2 py-1 ${article.featured ? 'bg-yellow-500 text-black' : 'bg-gray-600 text-white'}`}>
+                       {article.featured ? 'DESTACADO' : 'NORMAL'}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingItem(article);
+                    setModalType('article');
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteItem('articles', article.id)}
+                  className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderVenuesSection = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white font-space">Gestión de Venues</h2>
+        <button
+          onClick={() => {
+            setModalType('venue');
+            setEditingItem(null);
+            setShowModal(true);
+          }}
+          className="bg-neon-mint text-black px-4 py-2 font-space font-bold hover:bg-neon-cyan transition-colors"
+        >
+          <Plus className="w-4 h-4 inline mr-2" />
+          Nuevo Venue
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {(data.venues || []).map((venue) => (
+          <div key={venue.id} className="bg-gray-dark p-4 brutal-border border-gray-600">
+                         <div className="flex items-center justify-between">
+               <div className="flex items-center space-x-4 flex-1">
+                 {venue.image && (
+                   <img 
+                     src={venue.image} 
+                     alt={venue.name}
+                     className="w-16 h-16 object-cover brutal-border border-gray-600"
+                   />
+                 )}
+                 <div className="flex-1">
+                   <h3 className="text-white font-space font-bold">{venue.name}</h3>
+                   <p className="text-gray-light text-sm">{venue.address}, {venue.city}</p>
+                   <div className="flex items-center space-x-4 text-xs text-gray-light mt-1">
+                     <span>Capacidad: {venue.capacity}</span>
+                     <span>{venue.featured ? 'DESTACADO' : 'NORMAL'}</span>
+                   </div>
+                 </div>
+               </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setEditingItem(venue);
+                    setModalType('venue');
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteItem('venues', venue.id)}
+                  className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const renderModal = () => {
     if (!showModal) return null;
 
@@ -659,9 +926,28 @@ const Admin: React.FC = () => {
               </button>
             </div>
 
+            {modalType === 'event' && (
+              <div className="p-4 text-center text-gray-light">
+                <p>Formulario de eventos en desarrollo</p>
+              </div>
+            )}
+            {modalType === 'artist' && (
+              <div className="p-4 text-center text-gray-light">
+                <p>Formulario de artistas en desarrollo</p>
+              </div>
+            )}
+            {modalType === 'article' && (
+              <div className="p-4 text-center text-gray-light">
+                <p>Formulario de artículos en desarrollo</p>
+              </div>
+            )}
+            {modalType === 'venue' && (
+              <div className="p-4 text-center text-gray-light">
+                <p>Formulario de venues en desarrollo</p>
+              </div>
+            )}
             {modalType === 'music' && <MusicForm />}
             {modalType === 'user' && <UserForm />}
-            {/* Mantener los formularios existentes para otros tipos */}
           </div>
         </div>
       </div>
@@ -1047,9 +1333,12 @@ const Admin: React.FC = () => {
           {!loading && (
             <>
               {activeTab === 'dashboard' && renderDashboard()}
+              {activeTab === 'events' && renderEventsSection()}
+              {activeTab === 'artists' && renderArtistsSection()}
+              {activeTab === 'articles' && renderArticlesSection()}
+              {activeTab === 'venues' && renderVenuesSection()}
               {activeTab === 'music' && renderMusicSection()}
               {activeTab === 'users' && renderUsersSection()}
-              {/* Mantener las secciones existentes para events, artists, articles, venues */}
             </>
           )}
         </div>
