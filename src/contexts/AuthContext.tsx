@@ -35,18 +35,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Obtener sesión inicial
     const initializeAuth = async () => {
       try {
-        // Timeout para evitar carga infinita
+        // Timeout más largo para evitar carga infinita
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session timeout')), 8000)
+          setTimeout(() => reject(new Error('Session timeout')), 15000)
         );
 
-        const { data: { session }, error } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as any;
+        let sessionResult;
+        try {
+          sessionResult = await Promise.race([
+            sessionPromise,
+            timeoutPromise
+          ]) as any;
+        } catch (timeoutError) {
+          console.warn('Session initialization timeout, continuing with auth listener:', timeoutError);
+          // En caso de timeout, seguir con el loading false pero mantener el listener activo
+          if (mounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
         
         if (!mounted) return;
+
+        const { data: { session }, error } = sessionResult;
 
         if (error) {
           console.error('Error getting session:', error);
@@ -80,19 +92,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state changed:', event, session);
+        console.log('Auth state changed:', event, session?.user ? 'User logged in' : 'No user');
         setSession(session);
         
         if (session?.user) {
-          await fetchUserProfile(session.user);
+          try {
+            await fetchUserProfile(session.user);
+          } catch (error) {
+            console.error('Error fetching profile in auth state change:', error);
+                                      // En caso de error, crear un usuario básico
+             setUser({
+               id: session.user.id,
+               name: session.user.email?.split('@')[0] || 'usuario',
+               email: session.user.email || '',
+               role: 'editor'
+             });
+          }
         } else {
           setUser(null);
         }
         
-        // Solo cambiar loading si no estamos ya cargando
-        if (isLoading) {
-          setIsLoading(false);
-        }
+        // Asegurar que loading se desactive
+        setIsLoading(false);
       }
     );
 
