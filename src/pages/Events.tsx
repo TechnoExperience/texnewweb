@@ -3,13 +3,13 @@ import { Search, Filter, Calendar, MapPin, Users, Grid, List, Map } from 'lucide
 import EventCard from '../components/ui/EventCard';
 import EventCalendar from '../components/ui/EventCalendar';
 import EventMap from '../components/ui/EventMap';
-import useSupabase from '../hooks/useSupabase';
+import { supabase } from '../lib/supabase';
 import DataManager from '../utils/dataManager';
 import { Event } from '../data/types';
 
 const Events: React.FC = () => {
-  const { events: supabaseEvents, eventsLoading, fetchEvents } = useSupabase();
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -19,48 +19,66 @@ const Events: React.FC = () => {
 
   // Cargar eventos al montar el componente
   useEffect(() => {
-    const loadEvents = async () => {
-      // Intentar cargar desde Supabase primero
-      try {
-        await fetchEvents();
-        
-        // Si hay eventos de Supabase, usarlos
-        if (supabaseEvents.length > 0) {
-          // Mapear eventos de Supabase al formato local
-          const mappedEvents: Event[] = supabaseEvents.map(event => ({
-            id: event.id,
-            title: event.title,
-            date: event.date,
-            time: event.time,
-            venue: event.location,
-            city: event.location.split(',')[1]?.trim() || 'Unknown',
-            category: event.genre || 'Electronic',
-            image: event.image_url || '/images/techno-party-neon.jpg',
-            description: event.description || '',
-            artists: [{ name: 'TBA', genre: event.genre || 'Electronic' }],
-            tickets: {
-              price: event.price || 25,
-              available: event.capacity || 500,
-              total: event.capacity || 500,
-              url: '#'
-            }
-          }));
-          setEvents(mappedEvents);
-        } else {
-          // Si no hay eventos en Supabase, usar datos mock
-          const loadedEvents = DataManager.getEvents();
-          setEvents(loadedEvents);
-        }
-      } catch (error) {
-        console.error('Error loading events from Supabase:', error);
-        // Fallback a datos locales
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      console.log('Cargando eventos desde Supabase...');
+      
+      const { data: supabaseEvents, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        // Fallback a datos mock
+        const loadedEvents = DataManager.getEvents();
+        setEvents(loadedEvents);
+        return;
+      }
+
+      console.log('Eventos encontrados:', supabaseEvents?.length || 0);
+
+      if (supabaseEvents && supabaseEvents.length > 0) {
+        // Mapear eventos de Supabase al formato local
+        const mappedEvents: Event[] = supabaseEvents.map(event => ({
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          venue: event.location,
+          city: event.location.split(',')[1]?.trim() || 'Unknown',
+          category: event.genre || 'Electronic',
+          image: event.image_url || '/images/techno-party-neon.jpg',
+          description: event.description || '',
+          featured: event.featured || false,
+          artists: [{ name: 'TBA', genre: event.genre || 'Electronic' }],
+          tickets: {
+            price: event.price || 25,
+            available: event.capacity || 500,
+            total: event.capacity || 500,
+            url: '#'
+          }
+        }));
+        setEvents(mappedEvents);
+      } else {
+        // Si no hay eventos en Supabase, usar datos mock
+        console.log('No hay eventos en Supabase, usando datos mock');
         const loadedEvents = DataManager.getEvents();
         setEvents(loadedEvents);
       }
-    };
-
-    loadEvents();
-  }, [supabaseEvents]);
+    } catch (error) {
+      console.error('Error loading events from Supabase:', error);
+      // Fallback a datos locales
+      const loadedEvents = DataManager.getEvents();
+      setEvents(loadedEvents);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Get unique cities and categories for filters
   const cities = Array.from(new Set(events.map(event => event.city)));
@@ -102,6 +120,21 @@ const Events: React.FC = () => {
     // Aquí podrías abrir un modal o navegar a la página del evento
     console.log('Evento seleccionado:', event);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black pt-24">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-neon-mint border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-light font-space">Cargando eventos...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black pt-8">
