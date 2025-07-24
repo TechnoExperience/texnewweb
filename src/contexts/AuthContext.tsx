@@ -126,6 +126,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
     try {
+      // Modo de autenticación temporal - sin dependencias de base de datos
+      const isAdmin = supabaseUser.email === 'technoexperiencemagazine@gmail.com';
+      
+      console.log('🔑 Autenticando usuario:', supabaseUser.email);
+      
+      setUser({
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: supabaseUser.email?.split('@')[0] || 'usuario',
+        role: isAdmin ? 'admin' : 'editor'
+      });
+
+      console.log('✅ Usuario autenticado exitosamente:', {
+        email: supabaseUser.email,
+        role: isAdmin ? 'admin' : 'editor'
+      });
+
+      return;
+
+      // CÓDIGO ORIGINAL COMENTADO - Se reactivará cuando las tablas estén listas
+      /*
       const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -192,6 +213,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: profile.role as 'admin' | 'editor' | 'redactor',
         avatar: profile.avatar_url
       });
+      */
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       // En caso de error, crear usuario básico para no bloquear la app
@@ -199,7 +221,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: supabaseUser.email?.split('@')[0] || 'usuario',
-        role: 'redactor'
+        role: 'editor'
       });
     }
   };
