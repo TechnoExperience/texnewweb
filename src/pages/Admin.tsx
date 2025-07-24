@@ -969,26 +969,10 @@ const Admin: React.FC = () => {
               </button>
             </div>
 
-            {modalType === 'event' && (
-              <div className="p-4 text-center text-gray-light">
-                <p>Formulario de eventos en desarrollo</p>
-              </div>
-            )}
-            {modalType === 'artist' && (
-              <div className="p-4 text-center text-gray-light">
-                <p>Formulario de artistas en desarrollo</p>
-              </div>
-            )}
-            {modalType === 'article' && (
-              <div className="p-4 text-center text-gray-light">
-                <p>Formulario de artículos en desarrollo</p>
-              </div>
-            )}
-            {modalType === 'venue' && (
-              <div className="p-4 text-center text-gray-light">
-                <p>Formulario de venues en desarrollo</p>
-              </div>
-            )}
+            {modalType === 'event' && <EventForm />}
+            {modalType === 'artist' && <ArtistForm />}
+            {modalType === 'article' && <ArticleForm />}
+            {modalType === 'venue' && <VenueForm />}
             {modalType === 'music' && <MusicForm />}
             {modalType === 'user' && <UserForm />}
           </div>
@@ -1183,6 +1167,821 @@ const Admin: React.FC = () => {
             className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear')}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  const VenueForm = () => {
+    const [formData, setFormData] = useState({
+      name: editingItem?.name || '',
+      address: editingItem?.address || '',
+      city: editingItem?.city || '',
+      country: editingItem?.country || 'España',
+      capacity: editingItem?.capacity || '',
+      description: editingItem?.description || '',
+      image: editingItem?.image || '',
+      website: editingItem?.website || '',
+      phone: editingItem?.phone || '',
+      email: editingItem?.email || '',
+      featured: editingItem?.featured || false,
+      venue_type: editingItem?.venue_type || 'club'
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      const submitData = {
+        ...formData,
+        capacity: formData.capacity ? parseInt(formData.capacity) : null
+      };
+
+      try {
+        if (editingItem) {
+          const { error } = await supabase
+            .from('venues')
+            .update(submitData)
+            .eq('id', editingItem.id);
+          
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('venues')
+            .insert([submitData]);
+          
+          if (error) throw error;
+        }
+        
+        setShowModal(false);
+        await loadData();
+      } catch (error) {
+        console.error('Error saving venue:', error);
+        setError('Error al guardar el venue');
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Nombre *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Tipo de Venue</label>
+            <select
+              value={formData.venue_type}
+              onChange={(e) => setFormData({...formData, venue_type: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="club">Club</option>
+              <option value="festival">Festival</option>
+              <option value="warehouse">Warehouse</option>
+              <option value="arena">Arena</option>
+              <option value="outdoor">Outdoor</option>
+              <option value="underground">Underground</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Dirección *</label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Ciudad *</label>
+            <input
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({...formData, city: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">País</label>
+            <input
+              type="text"
+              value={formData.country}
+              onChange={(e) => setFormData({...formData, country: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Capacidad</label>
+            <input
+              type="number"
+              value={formData.capacity}
+              onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Website</label>
+            <input
+              type="url"
+              value={formData.website}
+              onChange={(e) => setFormData({...formData, website: e.target.value})}
+              placeholder="https://venue-website.com"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Teléfono</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Descripción</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            rows={4}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            placeholder="Descripción del venue, ambiente, características especiales..."
+          />
+        </div>
+
+        <ImageUpload
+          onUpload={(url) => setFormData({...formData, image: url})}
+          currentImage={formData.image}
+          label="Imagen del Venue"
+          resize={{ width: 1200, height: 800 }}
+        />
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Venue Destacado</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear') + ' Venue'}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  const ArticleForm = () => {
+    const [formData, setFormData] = useState({
+      title: editingItem?.title || '',
+      content: editingItem?.content || '',
+      excerpt: editingItem?.excerpt || '',
+      image_url: editingItem?.image_url || '',
+      category: editingItem?.category || 'news',
+      tags: editingItem?.tags?.join(', ') || '',
+      published: editingItem?.published || false,
+      featured: editingItem?.featured || false,
+      slug: editingItem?.slug || '',
+      reading_time: editingItem?.reading_time || ''
+    });
+
+    const generateSlug = (title: string) => {
+      return title
+        .toLowerCase()
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      const submitData = {
+        ...formData,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [],
+        slug: formData.slug || generateSlug(formData.title),
+        reading_time: formData.reading_time ? parseInt(formData.reading_time) : Math.ceil(formData.content.split(' ').length / 200)
+      };
+
+      try {
+        if (editingItem) {
+          const { error } = await supabase
+            .from('articles')
+            .update(submitData)
+            .eq('id', editingItem.id);
+          
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('articles')
+            .insert([submitData]);
+          
+          if (error) throw error;
+        }
+        
+        setShowModal(false);
+        await loadData();
+      } catch (error) {
+        console.error('Error saving article:', error);
+        setError('Error al guardar el artículo');
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Título *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => {
+                setFormData({...formData, title: e.target.value});
+                if (!formData.slug) {
+                  setFormData(prev => ({...prev, slug: generateSlug(e.target.value)}));
+                }
+              }}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Categoría</label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="news">Noticias</option>
+              <option value="review">Reseñas</option>
+              <option value="interview">Entrevistas</option>
+              <option value="culture">Cultura</option>
+              <option value="technology">Tecnología</option>
+              <option value="feature">Especiales</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Slug (URL)</label>
+            <input
+              type="text"
+              value={formData.slug}
+              onChange={(e) => setFormData({...formData, slug: generateSlug(e.target.value)})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Tiempo de Lectura (min)</label>
+            <input
+              type="number"
+              value={formData.reading_time}
+              onChange={(e) => setFormData({...formData, reading_time: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Extracto *</label>
+          <textarea
+            value={formData.excerpt}
+            onChange={(e) => setFormData({...formData, excerpt: e.target.value})}
+            rows={2}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            placeholder="Breve descripción del artículo..."
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Tags (separados por comas)</label>
+          <input
+            type="text"
+            value={formData.tags}
+            onChange={(e) => setFormData({...formData, tags: e.target.value})}
+            placeholder="techno, underground, españa"
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Contenido *</label>
+          <textarea
+            value={formData.content}
+            onChange={(e) => setFormData({...formData, content: e.target.value})}
+            rows={8}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            placeholder="Escribir el contenido del artículo..."
+            required
+          />
+        </div>
+
+        <ImageUpload
+          onUpload={(url) => setFormData({...formData, image_url: url})}
+          currentImage={formData.image_url}
+          label="Imagen del Artículo"
+          resize={{ width: 1200, height: 800 }}
+        />
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.published}
+              onChange={(e) => setFormData({...formData, published: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Publicado</span>
+          </label>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Artículo Destacado</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear') + ' Artículo'}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  const ArtistForm = () => {
+    const [formData, setFormData] = useState({
+      name: editingItem?.name || '',
+      bio: editingItem?.bio || '',
+      genre: editingItem?.genre || 'Techno',
+      country: editingItem?.country || '',
+      city: editingItem?.city || '',
+      image: editingItem?.image || '',
+      social_links: {
+        instagram: editingItem?.social_links?.instagram || '',
+        spotify: editingItem?.social_links?.spotify || '',
+        soundcloud: editingItem?.social_links?.soundcloud || '',
+        website: editingItem?.social_links?.website || ''
+      },
+      featured: editingItem?.featured || false,
+      verified: editingItem?.verified || false
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      try {
+        if (editingItem) {
+          const { error } = await supabase
+            .from('artists')
+            .update(formData)
+            .eq('id', editingItem.id);
+          
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('artists')
+            .insert([formData]);
+          
+          if (error) throw error;
+        }
+        
+        setShowModal(false);
+        await loadData();
+      } catch (error) {
+        console.error('Error saving artist:', error);
+        setError('Error al guardar el artista');
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Nombre *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Género Musical</label>
+            <select
+              value={formData.genre}
+              onChange={(e) => setFormData({...formData, genre: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="Techno">Techno</option>
+              <option value="House">House</option>
+              <option value="Minimal">Minimal</option>
+              <option value="Progressive">Progressive</option>
+              <option value="Trance">Trance</option>
+              <option value="Electronic">Electronic</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">País</label>
+            <input
+              type="text"
+              value={formData.country}
+              onChange={(e) => setFormData({...formData, country: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Ciudad</label>
+            <input
+              type="text"
+              value={formData.city}
+              onChange={(e) => setFormData({...formData, city: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Biografía</label>
+          <textarea
+            value={formData.bio}
+            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+            rows={4}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Instagram</label>
+            <input
+              type="url"
+              value={formData.social_links.instagram}
+              onChange={(e) => setFormData({
+                ...formData, 
+                social_links: {...formData.social_links, instagram: e.target.value}
+              })}
+              placeholder="https://instagram.com/artist"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Spotify</label>
+            <input
+              type="url"
+              value={formData.social_links.spotify}
+              onChange={(e) => setFormData({
+                ...formData, 
+                social_links: {...formData.social_links, spotify: e.target.value}
+              })}
+              placeholder="https://spotify.com/artist"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">SoundCloud</label>
+            <input
+              type="url"
+              value={formData.social_links.soundcloud}
+              onChange={(e) => setFormData({
+                ...formData, 
+                social_links: {...formData.social_links, soundcloud: e.target.value}
+              })}
+              placeholder="https://soundcloud.com/artist"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Website</label>
+            <input
+              type="url"
+              value={formData.social_links.website}
+              onChange={(e) => setFormData({
+                ...formData, 
+                social_links: {...formData.social_links, website: e.target.value}
+              })}
+              placeholder="https://artist-website.com"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+        </div>
+
+        <ImageUpload
+          onUpload={(url) => setFormData({...formData, image: url})}
+          currentImage={formData.image}
+          label="Foto del Artista"
+          resize={{ width: 800, height: 800 }}
+        />
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Artista Destacado</span>
+          </label>
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.verified}
+              onChange={(e) => setFormData({...formData, verified: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Artista Verificado</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear') + ' Artista'}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  const EventForm = () => {
+    const [formData, setFormData] = useState({
+      title: editingItem?.title || '',
+      description: editingItem?.description || '',
+      date: editingItem?.date || '',
+      time: editingItem?.time || '',
+      location: editingItem?.location || '',
+      image_url: editingItem?.image_url || '',
+      price: editingItem?.price || '',
+      capacity: editingItem?.capacity || '',
+      genre: editingItem?.genre || 'Techno',
+      featured: editingItem?.featured || false,
+      status: editingItem?.status || 'draft'
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      const submitData = {
+        ...formData,
+        price: formData.price ? parseFloat(formData.price) : null,
+        capacity: formData.capacity ? parseInt(formData.capacity) : null
+      };
+
+      try {
+        if (editingItem) {
+          const { error } = await supabase
+            .from('events')
+            .update(submitData)
+            .eq('id', editingItem.id);
+          
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('events')
+            .insert([submitData]);
+          
+          if (error) throw error;
+        }
+        
+        setShowModal(false);
+        await loadData();
+      } catch (error) {
+        console.error('Error saving event:', error);
+        setError('Error al guardar el evento');
+      }
+    };
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Título *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Ubicación *</label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => setFormData({...formData, location: e.target.value})}
+              placeholder="Venue, Ciudad"
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Fecha *</label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({...formData, date: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Hora *</label>
+            <input
+              type="time"
+              value={formData.time}
+              onChange={(e) => setFormData({...formData, time: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Precio (€)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.price}
+              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Capacidad</label>
+            <input
+              type="number"
+              value={formData.capacity}
+              onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            />
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Género</label>
+            <select
+              value={formData.genre}
+              onChange={(e) => setFormData({...formData, genre: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="Techno">Techno</option>
+              <option value="House">House</option>
+              <option value="Electronic">Electronic</option>
+              <option value="Minimal">Minimal</option>
+              <option value="Progressive">Progressive</option>
+              <option value="Trance">Trance</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-white font-space text-sm mb-2">Estado</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            >
+              <option value="draft">Borrador</option>
+              <option value="published">Publicado</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white font-space text-sm mb-2">Descripción *</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            rows={4}
+            className="w-full bg-gray-800 text-white border border-gray-600 px-3 py-2 font-space"
+            required
+          />
+        </div>
+
+        <ImageUpload
+          onUpload={(url) => setFormData({...formData, image_url: url})}
+          currentImage={formData.image_url}
+          label="Imagen del Evento"
+          resize={{ width: 1200, height: 800 }}
+        />
+
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+              className="form-checkbox text-neon-mint"
+            />
+            <span className="text-white font-space text-sm">Evento Destacado</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-gray-600 text-white font-space hover:bg-gray-500 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 bg-neon-mint text-black font-space font-bold hover:bg-neon-cyan transition-colors disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingItem ? 'Actualizar' : 'Crear') + ' Evento'}
           </button>
         </div>
       </form>
