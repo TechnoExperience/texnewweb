@@ -3,14 +3,13 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import sourceIdentifierPlugin from 'vite-plugin-source-identifier'
 
-const isProd = process.env.BUILD_MODE === 'prod'
 export default defineConfig({
   plugins: [
     react(), 
     sourceIdentifierPlugin({
-      enabled: !isProd,
+      enabled: false, // Desactivado para evitar atributos en el HTML
       attributePrefix: 'data-matrix',
-      includeProps: true,
+      includeProps: false,
     })
   ],
   resolve: {
