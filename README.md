@@ -3,6 +3,7 @@
 ## Plataforma Líder de Cultura Techno
 
 [![Deployed](https://img.shields.io/badge/Status-Deployed-success)](https://al73s4f814kx.space.minimax.io)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/technoexperiences-projects/v0-techno-experience-platform)
 [![React](https://img.shields.io/badge/React-18.3-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-green)](https://supabase.com/)
@@ -296,6 +297,18 @@ Para consultas técnicas o soporte:
 - Revisa la documentación en `/workspace/docs/`
 - Consulta logs de Supabase
 - Verifica políticas RLS en la base de datos
+
+---
+
+## 🚀 Despliegue en Vercel
+
+El proyecto también está desplegado en Vercel:
+
+**URL de Vercel:** https://vercel.com/technoexperiences-projects/v0-techno-experience-platform
+
+### Despliegue Automático
+
+Este repositorio está conectado con Vercel para despliegues automáticos. Cada push a la rama `main` se desplegará automáticamente.
 
 ---
 

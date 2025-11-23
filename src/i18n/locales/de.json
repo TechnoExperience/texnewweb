@@ -1,0 +1,128 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "news": "Nachrichten",
+    "events": "Veranstaltungen",
+    "releases": "Veröffentlichungen",
+    "videos": "Videos",
+    "djSets": "DJ Sets",
+    "shortVideos": "Kurzvideos",
+    "login": "Anmelden",
+    "signUp": "Registrieren",
+    "logout": "Abmelden",
+    "admin": "Admin"
+  },
+  "home": {
+    "featuredNews": "Hauptnachrichten",
+    "latestNews": "Neueste Nachrichten",
+    "readMore": "Mehr lesen"
+  },
+  "news": {
+    "title": "Nachrichten",
+    "categories": {
+      "general": "Allgemein",
+      "interview": "Interview",
+      "review": "Rezension",
+      "feature": "Feature",
+      "opinion": "Meinung"
+    },
+    "publishedOn": "Veröffentlicht am",
+    "by": "von",
+    "views": "Aufrufe"
+  },
+  "events": {
+    "title": "Veranstaltungen",
+    "upcoming": "Kommende Veranstaltungen",
+    "past": "Vergangene Veranstaltungen",
+    "date": "Datum",
+    "venue": "Veranstaltungsort",
+    "lineup": "Line-up",
+    "tickets": "Tickets",
+    "getTickets": "Tickets kaufen",
+    "status": {
+      "upcoming": "Kommend",
+      "ongoing": "Laufend",
+      "past": "Vergangen",
+      "cancelled": "Abgesagt"
+    }
+  },
+  "releases": {
+    "title": "Veröffentlichungen",
+    "artist": "Künstler",
+    "label": "Label",
+    "releaseDate": "Veröffentlichungsdatum",
+    "tracklist": "Trackliste",
+    "listenOn": "Hören auf",
+    "styles": {
+      "all": "Alle Stile",
+      "acid_techno": "Acid Techno",
+      "detroit_techno": "Detroit Techno",
+      "minimal_techno": "Minimal Techno",
+      "hard_techno": "Hard Techno",
+      "industrial_techno": "Industrial Techno",
+      "melodic_techno": "Melodic Techno",
+      "progressive_techno": "Progressive Techno",
+      "raw_techno": "Raw Techno",
+      "peak_time_techno": "Peak Time Techno",
+      "dub_techno": "Dub Techno",
+      "ambient_techno": "Ambient Techno",
+      "hypnotic_techno": "Hypnotic Techno",
+      "tribal_techno": "Tribal Techno",
+      "experimental_techno": "Experimental Techno"
+    }
+  },
+  "videos": {
+    "title": "Videos",
+    "djSets": "DJ Sets",
+    "shortVideos": "Kurzvideos",
+    "duration": "Dauer",
+    "watchOn": "Ansehen auf",
+    "relatedVideos": "Verwandte Videos"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "signUp": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "rememberMe": "Angemeldet bleiben",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "signUpSuccess": "Registrierung erfolgreich",
+    "checkEmail": "Bitte überprüfen Sie Ihre E-Mail, um Ihr Konto zu bestätigen",
+    "error": "Fehler",
+    "errorMessage": "Es gab ein Problem mit Ihrer Anfrage"
+  },
+  "cms": {
+    "dashboard": "Dashboard",
+    "manageNews": "Nachrichten verwalten",
+    "manageEvents": "Veranstaltungen verwalten",
+    "manageReleases": "Veröffentlichungen verwalten",
+    "manageVideos": "Videos verwalten",
+    "create": "Erstellen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "publish": "Veröffentlichen",
+    "unpublish": "Unveröffentlichen",
+    "featured": "Hervorgehoben"
+  },
+  "footer": {
+    "about": "Über uns",
+    "aboutText": "Techno Experience ist Ihre ultimative Quelle für alles rund um die Techno-Kultur.",
+    "quickLinks": "Schnelllinks",
+    "contact": "Kontakt",
+    "followUs": "Folgen Sie uns",
+    "rights": "Alle Rechte vorbehalten"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "retry": "Erneut versuchen",
+    "viewAll": "Alle anzeigen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "sort": "Sortieren"
+  }
+}
