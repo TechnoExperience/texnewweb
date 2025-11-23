@@ -1,0 +1,21 @@
+CREATE TABLE perfiles_usuario (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    tipo_perfil TEXT NOT NULL CHECK (tipo_perfil IN ('dj',
+    'promotor',
+    'clubber',
+    'sello',
+    'agencia')),
+    nombre_artistico TEXT,
+    nombre_comercial TEXT,
+    biografia TEXT,
+    ciudad TEXT,
+    pais TEXT,
+    generos_preferidos TEXT[],
+    redes_sociales JSONB,
+    verificado BOOLEAN DEFAULT false,
+    avatar_url TEXT,
+    cover_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);

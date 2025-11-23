@@ -1,0 +1,22 @@
+CREATE TABLE noticias (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    titulo TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    resumen TEXT,
+    contenido TEXT NOT NULL,
+    autor_id UUID NOT NULL,
+    estado TEXT DEFAULT 'borrador' CHECK (estado IN ('borrador',
+    'revision',
+    'publicado',
+    'archivado')),
+    categoria TEXT,
+    etiquetas TEXT[],
+    imagen_portada TEXT,
+    galeria_imagenes TEXT[],
+    meta_title TEXT,
+    meta_description TEXT,
+    og_image TEXT,
+    fecha_publicacion TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);

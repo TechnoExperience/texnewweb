@@ -1,0 +1,23 @@
+CREATE TABLE videos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    titulo TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    tipo_video TEXT NOT NULL CHECK (tipo_video IN ('aftermovie',
+    'live_set',
+    'videoclip',
+    'dj_mix',
+    'documental')),
+    evento_id UUID,
+    lanzamiento_id UUID,
+    duracion_segundos INTEGER,
+    url_video TEXT NOT NULL,
+    thumbnail_url TEXT,
+    descripcion TEXT,
+    creditos JSONB,
+    estado TEXT DEFAULT 'borrador' CHECK (estado IN ('borrador',
+    'aprobado',
+    'publicado')),
+    vistas INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);

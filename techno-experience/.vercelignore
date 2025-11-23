@@ -1,0 +1,8 @@
+node_modules
+.pnpm-store
+dist
+.vite
+*.log
+.DS_Store
+
+
