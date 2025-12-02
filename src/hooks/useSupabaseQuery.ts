@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
+import { useSupabaseRealtime } from "./useSupabaseRealtime"
+import { useCacheInvalidation } from "./useCacheInvalidation"
 
 interface UseSupabaseQueryResult<T> {
     data: T[]
@@ -14,7 +16,8 @@ const CACHE_DURATION = 30000 // 30 segundos
 
 export function useSupabaseQuery<T>(
     table: string,
-    queryFn?: (query: any) => any
+    queryFn?: (query: any) => any,
+    options?: { enableRealtime?: boolean }
 ): UseSupabaseQueryResult<T> {
     const [data, setData] = useState<T[]>([])
     const [loading, setLoading] = useState(true)
@@ -22,6 +25,7 @@ export function useSupabaseQuery<T>(
     const isMountedRef = useRef(true)
     const queryFnRef = useRef(queryFn)
     const cacheKeyRef = useRef<string>('')
+    const { registerInvalidationListener, invalidateCache } = useCacheInvalidation()
 
     // Update queryFn ref when it changes
     useEffect(() => {
@@ -198,6 +202,36 @@ export function useSupabaseQuery<T>(
             setLoading(false)
         }
     }, [table])
+
+    // Registrar listener para invalidación de cache
+    useEffect(() => {
+        const unregister = registerInvalidationListener(table, () => {
+            // Invalidar cache y refetch
+            queryCache.delete(cacheKeyRef.current)
+            if (isMountedRef.current) {
+                fetchData()
+            }
+        })
+        return unregister
+    }, [table, registerInvalidationListener])
+
+    // Suscribirse a cambios en tiempo real si está habilitado
+    useSupabaseRealtime({
+        table,
+        enabled: options?.enableRealtime !== false,
+        onInsert: (payload) => {
+            // Invalidar cache cuando hay un nuevo insert
+            invalidateCache(table)
+        },
+        onUpdate: (payload) => {
+            // Invalidar cache cuando hay una actualización
+            invalidateCache(table)
+        },
+        onDelete: (payload) => {
+            // Invalidar cache cuando hay un delete
+            invalidateCache(table)
+        },
+    })
 
     useEffect(() => {
         isMountedRef.current = true

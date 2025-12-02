@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { analyzeSeo } from "@/lib/seo-analyzer"
@@ -189,20 +190,13 @@ export default function AdminReviewsEditPage() {
     }
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from("reviews").update(payload).eq("id", id)
-        if (error) {
-          console.error("Error saving review:", error)
-          alert(`Error al guardar la review: ${error.message}`)
-          throw error
-        }
-      } else {
-        const { error } = await supabase.from("reviews").insert(payload)
-        if (error) {
-          console.error("Error saving review:", error)
-          alert(`Error al guardar la review: ${error.message}`)
-          throw error
-        }
+      const result = await saveToCMS("reviews", payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        const errorMsg = result.error?.message || "Error al guardar la review"
+        console.error("Error saving review:", result.error)
+        alert(`Error al guardar la review: ${errorMsg}`)
+        throw result.error || new Error(errorMsg)
+      }
       }
       navigate("/admin/reviews")
     } catch (error: any) {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmbeddedPlayer } from "@/components/embedded-player"
 import { getEmbedFromUrl } from "@/lib/embeds"
@@ -152,12 +153,9 @@ export default function AdminReleasesEditPage() {
     }
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from("dj_releases").update(payload).eq("id", id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from("dj_releases").insert(payload)
-        if (error) throw error
+      const result = await saveToCMS("dj_releases", payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        throw result.error || new Error("Error al guardar el lanzamiento")
       }
       navigate("/admin/releases")
     } catch (error) {

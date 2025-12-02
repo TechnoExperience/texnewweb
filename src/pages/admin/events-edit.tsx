@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import type { Event } from "@/types"
@@ -119,12 +120,9 @@ export default function AdminEventsEditPage() {
     if (event.price_info) payload.price_info = event.price_info
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from("events").update(payload).eq("id", id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from("events").insert(payload)
-        if (error) throw error
+      const result = await saveToCMS("events", payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        throw result.error || new Error("Error al guardar el evento")
       }
       navigate("/admin/events")
     } catch (error) {

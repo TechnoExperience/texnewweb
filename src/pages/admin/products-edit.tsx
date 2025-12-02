@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import type { Product, Category } from "@/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
@@ -194,25 +195,12 @@ export default function AdminProductsEditPage() {
     }
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase
-          .from(TABLES.PRODUCTS)
-          .update(payload)
-          .eq("id", id)
-
-        if (error) {
-          console.error("Error saving product:", error)
-          toast.error(`Error al guardar el producto: ${error.message}`)
-          throw error
-        }
-      } else {
-        const { error } = await supabase.from(TABLES.PRODUCTS).insert(payload)
-
-        if (error) {
-          console.error("Error saving product:", error)
-          toast.error(`Error al guardar el producto: ${error.message}`)
-          throw error
-        }
+      const result = await saveToCMS(TABLES.PRODUCTS, payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        const errorMsg = result.error?.message || "Error al guardar el producto"
+        console.error("Error saving product:", result.error)
+        toast.error(`Error al guardar el producto: ${errorMsg}`)
+        throw result.error || new Error(errorMsg)
       }
 
       toast.success(`Producto ${isEditMode ? "actualizado" : "creado"} correctamente`)

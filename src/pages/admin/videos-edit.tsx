@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmbeddedPlayer } from "@/components/embedded-player"
 import { getEmbedFromUrl } from "@/lib/embeds"
@@ -113,11 +114,8 @@ export default function AdminVideosEditPage() {
     }
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from("videos").update(payload).eq("id", id)
-        if (error) throw error
-      } else {
-        // Obtener usuario actual para uploader_id
+      // Obtener usuario actual para uploader_id (solo en creación)
+      if (!isEditMode) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single()
@@ -125,8 +123,11 @@ export default function AdminVideosEditPage() {
             payload.uploader_id = profile.id
           }
         }
-        const { error } = await supabase.from("videos").insert(payload)
-        if (error) throw error
+      }
+      
+      const result = await saveToCMS("videos", payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        throw result.error || new Error("Error al guardar el vídeo")
       }
       navigate("/admin/videos")
     } catch (error) {

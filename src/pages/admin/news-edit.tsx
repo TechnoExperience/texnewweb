@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
+import { saveToCMS } from "@/lib/cms-sync"
 import type { NewsArticle, ArticleCategory } from "@/types"
 import { analyzeSeo } from "@/lib/seo-analyzer"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -198,12 +199,9 @@ export default function AdminNewsEditPage() {
     }
 
     try {
-      if (isEditMode) {
-        const { error } = await supabase.from("news").update(payload).eq("id", id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from("news").insert(payload)
-        if (error) throw error
+      const result = await saveToCMS("news", payload, isEditMode ? id : undefined)
+      if (!result.success) {
+        throw result.error || new Error("Error al guardar la noticia")
       }
       navigate("/admin/news")
     } catch (error) {
