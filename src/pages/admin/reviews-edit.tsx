@@ -197,7 +197,6 @@ export default function AdminReviewsEditPage() {
         alert(`Error al guardar la review: ${errorMsg}`)
         throw result.error || new Error(errorMsg)
       }
-      }
       navigate("/admin/reviews")
     } catch (error: any) {
       console.error("Error saving review:", error)
