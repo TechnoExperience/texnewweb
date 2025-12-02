@@ -26,7 +26,7 @@
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
-    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-avatar": "latest",
     "@radix-ui/react-checkbox": "latest",
     "@radix-ui/react-collapsible": "latest",
     "@radix-ui/react-context-menu": "latest",
