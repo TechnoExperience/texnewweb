@@ -121,7 +121,7 @@ export default function StorePage() {
 
       {/* Filters - Sticky */}
       <header className="sticky top-16 z-40 bg-black/98 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center gap-3 flex-wrap">
               {categories.map((cat) => {
@@ -153,7 +153,7 @@ export default function StorePage() {
       {/* Featured Products Section */}
       {selectedCategory === "all" && featuredProducts.length > 0 && (
         <section className="py-12 bg-gradient-to-b from-black to-zinc-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-4 mb-8">
               <Sparkles className="w-8 h-8 text-[#00F9FF]" />
               <h2 
@@ -183,7 +183,7 @@ export default function StorePage() {
       )}
 
       {/* Main Products Grid */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
           {filteredProducts && filteredProducts.length > 0 ? (
             filteredProducts.map((product, index) => (

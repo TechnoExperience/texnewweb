@@ -96,7 +96,7 @@ export default function ReviewsPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Hero Header - Spotify Style */}
       <div className="bg-gradient-to-b from-[#00F9FF]/10 via-black to-black pt-20 pb-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F9FF] to-[#00D9E6] flex items-center justify-center">
               <Star className="w-6 h-6 text-black" />
@@ -176,7 +176,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {filteredReviews && filteredReviews.length > 0 ? (
           <>
             <div className="flex items-center justify-between mb-6">

@@ -125,7 +125,7 @@ export default function VideosPage() {
   return (
     <div className="min-h-screen bg-black relative">
       <VideosBackground />
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 w-full px-4 py-8">
         <h1 className="text-4xl font-bold text-white mb-8">{t("videos.title")}</h1>
 
         {/* Advanced Filters */}

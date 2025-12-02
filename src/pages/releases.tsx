@@ -135,7 +135,7 @@ export default function ReleasesPage() {
           <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-[#00F9FF]/5 rounded-full blur-3xl animate-pulse delay-2000" />
         </div>
         
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Advanced Filters */}
           <div className="mb-6">
             <AdvancedFilters
@@ -188,7 +188,7 @@ export default function ReleasesPage() {
         transition={{ duration: 0.4 }}
         className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10"
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-2 min-w-max">
@@ -258,7 +258,7 @@ export default function ReleasesPage() {
       </motion.div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Featured Section - Enhanced with Animations */}
         {selectedStyle === "all" && featuredReleases.length > 0 && (
           <motion.div
