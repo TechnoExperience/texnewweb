@@ -4,9 +4,18 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase environment variables. Please check .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set."
-  )
+  const errorMessage = import.meta.env.PROD
+    ? "Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables."
+    : "Missing Supabase environment variables. Please check .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set."
+  
+  console.error("❌ Supabase Configuration Error:", errorMessage)
+  console.error("📋 Current environment:", {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    env: import.meta.env.MODE,
+  })
+  
+  throw new Error(errorMessage)
 }
 
 // Configuración optimizada del cliente Supabase
