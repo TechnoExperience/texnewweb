@@ -1,5 +1,5 @@
 // Application routes
-export const ROUTES = {
+const ROUTES = {
     HOME: "/",
     NEWS: "/news",
     EVENTS: "/events",
@@ -31,3 +31,5 @@ export const ROUTES = {
         USERS: "/admin/users",
     },
 } as const
+
+export { ROUTES }
