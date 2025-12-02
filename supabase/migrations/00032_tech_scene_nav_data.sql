@@ -162,3 +162,4 @@ WHERE featured = true AND event_type = 'promoter_festival';
 
 COMMENT ON INDEX idx_profiles_type_verified IS 'Índice para consultas rápidas de clubs y labels verificados';
 COMMENT ON INDEX idx_events_type_featured IS 'Índice para consultas rápidas de festivales destacados';
+
