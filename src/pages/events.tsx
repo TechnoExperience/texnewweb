@@ -34,14 +34,23 @@ export default function EventsPage() {
   })
 
   const allEventsQuery = useCallback(
-    (query: any) => query.order("event_date", { ascending: false }),
+    (query: any) => {
+      // Mostrar todos los eventos, incluyendo DRAFT si el usuario es admin
+      let q = query.order("event_date", { ascending: false })
+      // No filtrar por status aquí, mostrar todos
+      return q
+    },
     []
   )
 
   const upcomingQuery = useCallback(
     (query: any) => {
+      // Mostrar eventos futuros o de hoy
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
       let q = query
-        .gte("event_date", new Date().toISOString())
+        .gte("event_date", today.toISOString())
         .order("event_date", { ascending: true })
 
       if (selectedLocation && selectedLocation !== "all") {
@@ -72,8 +81,14 @@ export default function EventsPage() {
     let events = upcomingEvents && upcomingEvents.length > 0 ? upcomingEvents : []
     
     // Si no hay upcomingEvents, usar allEventsData como fallback
+    // Pero filtrar solo eventos futuros o de hoy
     if (events.length === 0 && allEventsData && allEventsData.length > 0) {
-      events = allEventsData
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      events = allEventsData.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today
+      })
     }
     
     // Aplicar filtros avanzados si existen

@@ -12,9 +12,14 @@ import type { Event, Release, Review, NewsArticle } from "@/types"
 
 export default function HomePage() {
   // Cargar todos los eventos próximos (sin límite restrictivo)
+  // Mostrar todos los eventos futuros, independientemente del status
   const { data: upcomingEvents } = useSupabaseQuery<Event>(
     TABLES.EVENTS,
-    (query) => query.gte("event_date", new Date().toISOString()).order("event_date", { ascending: true }).limit(20)
+    (query) => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return query.gte("event_date", today.toISOString()).order("event_date", { ascending: true }).limit(20)
+    }
   )
 
   // Cargar todos los lanzamientos recientes
