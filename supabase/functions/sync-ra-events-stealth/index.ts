@@ -325,13 +325,13 @@ Deno.serve(async (req) => {
             const eventId = raEvent.id || String(Date.now())
             
             // Verificar si ya existe
-            const { data: existing } = await supabase
+            const { data: existing, error: checkError } = await supabase
               .from('events')
               .select('id')
               .eq('ra_event_id', eventId)
-              .single()
+              .maybeSingle()
 
-            if (existing) {
+            if (existing && !checkError) {
               totalSkipped++
               continue
             }
@@ -359,15 +359,18 @@ Deno.serve(async (req) => {
               status: 'DRAFT', // Requiere moderación
             }
 
-            const { error } = await supabase
+            const insertResult = await supabase
               .from('events')
               .insert(eventData)
+              .select()
 
-            if (error) {
-              if (error.code !== '23505') { // Ignorar duplicados
-                errors.push(`${city}: ${error.message}`)
+            if (insertResult.error) {
+              if (insertResult.error.code !== '23505') { // Ignorar duplicados
+                errors.push(`${city}: ${insertResult.error.message}`)
+              } else {
+                totalSkipped++
               }
-            } else {
+            } else if (insertResult.data && insertResult.data.length > 0) {
               totalCreated++
             }
 
