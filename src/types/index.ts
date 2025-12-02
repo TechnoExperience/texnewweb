@@ -89,6 +89,7 @@ export interface Release {
     label: string
     release_date: string
     cover_art: string
+    images?: string[] // Fotos adicionales del lanzamiento
     genre: string[]
     techno_style: string
     language: string

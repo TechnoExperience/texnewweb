@@ -76,16 +76,48 @@ export default function EventsPage() {
       events = allEventsData
     }
     
-    // Aplicar todos los filtros (fecha, ubicación, tipo) a todos los eventos
-    if (events.length > 0) {
-      return events.filter(event => {
-        // Filtrar por fecha
+    // Aplicar filtros avanzados si existen
+    let filteredEvents = events
+    
+    if (advancedFilters.search) {
+      const searchLower = advancedFilters.search.toLowerCase()
+      filteredEvents = filteredEvents.filter(event => 
+        event.title?.toLowerCase().includes(searchLower) ||
+        event.venue?.toLowerCase().includes(searchLower) ||
+        event.city?.toLowerCase().includes(searchLower) ||
+        event.description?.toLowerCase().includes(searchLower)
+      )
+    }
+    
+    if (advancedFilters.dateFrom || advancedFilters.dateTo) {
+      filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event.event_date)
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        
-        if (eventDate < today) {
-          return false
+        if (advancedFilters.dateFrom) {
+          const fromDate = new Date(advancedFilters.dateFrom)
+          fromDate.setHours(0, 0, 0, 0)
+          if (eventDate < fromDate) return false
+        }
+        if (advancedFilters.dateTo) {
+          const toDate = new Date(advancedFilters.dateTo)
+          toDate.setHours(23, 59, 59, 999)
+          if (eventDate > toDate) return false
+        }
+        return true
+      })
+    }
+    
+    // Aplicar todos los filtros (fecha, ubicación, tipo) a todos los eventos
+    if (filteredEvents.length > 0) {
+      return filteredEvents.filter(event => {
+        // Filtrar por fecha (solo futuros por defecto, pero permitir pasados si hay filtros de fecha)
+        if (!advancedFilters.dateFrom && !advancedFilters.dateTo) {
+          const eventDate = new Date(event.event_date)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          
+          if (eventDate < today) {
+            return false
+          }
         }
         
         // Filtrar por ubicación
@@ -107,7 +139,7 @@ export default function EventsPage() {
     }
     
     return []
-  }, [upcomingEvents, allEventsData, selectedLocation, selectedEventType])
+  }, [upcomingEvents, allEventsData, selectedLocation, selectedEventType, advancedFilters])
 
   const headerEventsQuery = useCallback(
     (query: any) => {

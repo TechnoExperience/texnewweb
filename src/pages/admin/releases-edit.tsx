@@ -46,7 +46,10 @@ export default function AdminReleasesEditPage() {
         alert("Error al cargar el lanzamiento")
         navigate("/admin/releases")
       } else if (data) {
-        setRelease(data)
+        setRelease({
+          ...data,
+          images: data.images || [] // Asegurar que images sea un array
+        })
         setPlayerUrl(data.player_url || "")
         setEmbedHtml(data.embed_html || "")
         if (data.player_url) {
@@ -117,16 +120,73 @@ export default function AdminReleasesEditPage() {
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = await handleImageUpload(file)
-    if (url) {
-      handleChange("cover_art", url)
+    
+    // Validar que la imagen sea cuadrada (1:1)
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    
+    img.onload = async () => {
+      URL.revokeObjectURL(objectUrl)
+      const aspectRatio = img.width / img.height
+      
+      // Permitir un margen de error del 5% (0.95 a 1.05)
+      if (aspectRatio < 0.95 || aspectRatio > 1.05) {
+        alert("La imagen debe ser cuadrada (relación 1:1). Por favor, recorta la imagen antes de subirla.")
+        return
+      }
+      
+      const url = await handleImageUpload(file)
+      if (url) {
+        handleChange("cover_art", url)
+      }
     }
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      alert("Error al cargar la imagen. Por favor, verifica que sea un archivo de imagen válido.")
+    }
+    
+    img.src = objectUrl
+  }
+
+  const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    
+    const currentImages = release.images || []
+    const newImages: string[] = []
+    
+    for (const file of files) {
+      try {
+        const url = await handleImageUpload(file)
+        if (url) {
+          newImages.push(url)
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error)
+      }
+    }
+    
+    if (newImages.length > 0) {
+      handleChange("images", [...currentImages, ...newImages])
+    }
+  }
+
+  const removeAdditionalImage = (index: number) => {
+    const currentImages = release.images || []
+    handleChange("images", currentImages.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!release.title || !release.artist || !release.label || !release.release_date) {
       alert("Título, artista, label y fecha son obligatorios.")
+      return
+    }
+    
+    // Validar que la portada sea obligatoria
+    if (!release.cover_art) {
+      alert("La portada (imagen cuadrada 1:1) es obligatoria.")
       return
     }
 
@@ -137,7 +197,8 @@ export default function AdminReleasesEditPage() {
       artist: release.artist,
       label: release.label,
       release_date: release.release_date,
-      cover_art: release.cover_art || "",
+      cover_art: release.cover_art, // Obligatorio
+      images: release.images || [], // Fotos adicionales
       genre: release.genre || [],
       techno_style: release.techno_style || "",
       language: release.language || "es",
@@ -281,17 +342,67 @@ export default function AdminReleasesEditPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-white">Portada (cover art)</label>
-                <Input type="file" accept="image/*" onChange={handleCoverUpload} />
+                <label className="block text-sm font-medium mb-1 text-white">
+                  Portada (cover art) <span className="text-red-400">*</span>
+                </label>
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleCoverUpload}
+                  required
+                  className="bg-zinc-900 border-zinc-700 text-white"
+                />
                 <p className="mt-1 text-xs text-zinc-400">
-                  Recomendado: 1200x1200px, formato JPG/PNG, máximo 2MB. Esta imagen se usa en las tarjetas del frontend.
+                  <strong>OBLIGATORIO:</strong> Imagen cuadrada (relación 1:1). Recomendado: 1200x1200px, formato JPG/PNG, máximo 2MB.
                 </p>
                 {release.cover_art && (
-                  <img
-                    src={release.cover_art}
-                    alt="Portada"
-                    className="mt-2 w-full max-w-md h-auto border border-zinc-700"
-                  />
+                  <div className="mt-4">
+                    <img
+                      src={release.cover_art}
+                      alt="Portada"
+                      className="w-64 h-64 object-cover border border-zinc-700 rounded-lg"
+                    />
+                    <p className="mt-2 text-xs text-green-400">✓ Portada cargada correctamente</p>
+                  </div>
+                )}
+                {!release.cover_art && (
+                  <p className="mt-2 text-xs text-red-400">⚠ Debes subir una portada cuadrada (1:1)</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1 text-white">
+                  Fotos adicionales (opcional)
+                </label>
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple
+                  onChange={handleAdditionalImageUpload}
+                  className="bg-zinc-900 border-zinc-700 text-white"
+                />
+                <p className="mt-1 text-xs text-zinc-400">
+                  Puedes añadir múltiples fotos adicionales del lanzamiento (artwork, fotos del artista, etc.)
+                </p>
+                {release.images && release.images.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {release.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image}
+                          alt={`Foto adicional ${index + 1}`}
+                          className="w-full h-32 object-cover border border-zinc-700 rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeAdditionalImage(index)}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
               <div className="space-y-4">
