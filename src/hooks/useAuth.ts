@@ -55,7 +55,8 @@ export function useAuth() {
             })
             subscription = sub
         } catch (error) {
-            if (!shouldSilenceError(error, [error?.message || ''])) {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            if (!shouldSilenceError(error, [errorMessage])) {
                 console.error('Auth subscription error:', error)
             }
             setLoading(false)
@@ -71,7 +72,8 @@ export function useAuth() {
         try {
             await supabase.auth.signOut()
         } catch (error) {
-            if (!shouldSilenceError(error, [error?.message || ''])) {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            if (!shouldSilenceError(error, [errorMessage])) {
                 console.error('Sign out error:', error)
             }
         }

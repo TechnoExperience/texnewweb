@@ -146,7 +146,10 @@ export function useProductRecommendations(options: RecommendationOptions = {}) {
       products.sort((a: any, b: any) => (b._recommendationScore || 0) - (a._recommendationScore || 0))
 
       // Remove score from final products
-      const finalProducts = products.slice(0, limit).map(({ _recommendationScore, ...product }) => product)
+      const finalProducts = products.slice(0, limit).map((product: any) => {
+        const { _recommendationScore, ...rest } = product
+        return rest
+      })
 
       setRecommendations(finalProducts)
     } catch (error) {

@@ -121,6 +121,7 @@ export interface Video {
     featured: boolean
     view_count: number
     video_type?: "aftermovie" | "live_set" | "music_video" | "dj_mix"
+    status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
 }
 
 export interface Review {

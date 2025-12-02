@@ -85,7 +85,7 @@ export function useSupabaseQuery<T>(
             queryCache.set(cacheKey, { 
                 data: [], 
                 timestamp: now, 
-                promise: queryPromise.then(r => r.data || []) 
+                promise: Promise.resolve(queryPromise.then(r => r.data || [])) 
             })
 
             const { data: result, error: queryError } = await queryPromise

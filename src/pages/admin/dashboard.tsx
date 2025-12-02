@@ -21,7 +21,7 @@ import {
   FolderTree,
   ShoppingCart,
 } from "lucide-react"
-import { AdminStatsCharts } from "@/components/admin-stats-charts"
+// import { AdminStatsCharts } from "@/components/admin-stats-charts" // TODO: Usar cuando se implementen gráficos
 import type { User } from "@supabase/supabase-js"
 import { useUserProfile } from "@/hooks/useUserProfile"
 

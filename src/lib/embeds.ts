@@ -6,6 +6,7 @@ export type EmbedProvider =
   | "mixcloud"
   | "instagram"
   | "tiktok"
+  | "custom"
   | "unknown"
 
 export interface EmbedData {

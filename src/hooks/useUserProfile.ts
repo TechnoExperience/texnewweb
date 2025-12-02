@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useSupabaseQuerySingle } from "@/hooks/useSupabaseQuerySingle"
 import { TABLES } from "@/constants/tables"

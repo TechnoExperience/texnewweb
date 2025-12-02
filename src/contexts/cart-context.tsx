@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
-import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import type { CartItem, Product, ProductVariant } from "@/types"
 

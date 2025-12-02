@@ -145,7 +145,7 @@ export function UnifiedCard({ type, data, index = 0 }: UnifiedCardProps) {
               <div className="flex items-center gap-1 px-3 py-1 bg-black/60 backdrop-blur-sm border border-white/20">
                 <Star className="w-4 h-4 fill-[#00F9FF] text-[#00F9FF]" />
                 <span className="text-white font-space text-sm font-bold">
-                  {(data as Review).rating.toFixed(1)}
+                  {((data as Review).rating || 0).toFixed(1)}
                 </span>
               </div>
             )}

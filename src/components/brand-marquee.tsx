@@ -1,4 +1,3 @@
-import React from "react"
 
 const ITEMS = [
   "+10 AÑOS DE ESCENA UNDERGROUND",

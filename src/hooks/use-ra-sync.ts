@@ -1,3 +1,6 @@
+// NOTE: Este hook requiere @tanstack/react-query que no está instalado
+// Comentado temporalmente hasta que se instale la dependencia o se implemente sin ella
+/*
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Event } from '@/types'
@@ -73,3 +76,4 @@ export function useSyncStats() {
         refetchInterval: 60 * 1000 // Refresh every minute
     })
 }
+*/
