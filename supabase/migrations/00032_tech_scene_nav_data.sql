@@ -24,7 +24,20 @@ BEGIN
 END
 $$;
 
--- 2) Insertar clubs como perfiles (si no existen)
+-- 2) Asegurar que existe la columna 'name' en profiles
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'name'
+  ) THEN
+    ALTER TABLE profiles ADD COLUMN name TEXT;
+    RAISE NOTICE 'Columna "name" agregada a la tabla profiles';
+  END IF;
+END
+$$;
+
+-- 3) Insertar clubs como perfiles (si no existen)
 INSERT INTO profiles (id, email, role, profile_type, name, city, country, is_active, is_verified, verification_status)
 SELECT 
   gen_random_uuid(),
@@ -58,7 +71,7 @@ WHERE NOT EXISTS (
 )
 ON CONFLICT DO NOTHING;
 
--- 3) Insertar labels como perfiles (si no existen)
+-- 4) Insertar labels como perfiles (si no existen)
 INSERT INTO profiles (id, email, role, profile_type, name, city, country, is_active, is_verified, verification_status)
 SELECT 
   gen_random_uuid(),
@@ -86,7 +99,7 @@ WHERE NOT EXISTS (
 )
 ON CONFLICT DO NOTHING;
 
--- 4) Insertar festivales como eventos (si no existen)
+-- 5) Insertar festivales como eventos (si no existen)
 INSERT INTO events (id, title, slug, description, event_date, venue, city, country, event_type, featured, status)
 SELECT 
   gen_random_uuid(),
@@ -116,7 +129,7 @@ WHERE NOT EXISTS (
 )
 ON CONFLICT (slug) DO NOTHING;
 
--- 5) Crear índices para mejorar rendimiento de consultas
+-- 6) Crear índices para mejorar rendimiento de consultas
 CREATE INDEX IF NOT EXISTS idx_profiles_type_verified ON profiles(profile_type, is_verified) 
 WHERE is_verified = true;
 CREATE INDEX IF NOT EXISTS idx_events_type_featured ON events(event_type, featured) 
