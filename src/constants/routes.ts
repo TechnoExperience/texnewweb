@@ -1,5 +1,5 @@
 // Application routes
-const ROUTES_OBJ = {
+export const ROUTES = {
     HOME: "/",
     NEWS: "/news",
     EVENTS: "/events",
@@ -30,6 +30,4 @@ const ROUTES_OBJ = {
         ORDERS: "/admin/orders",
         USERS: "/admin/users",
     },
-} as const
-
-export const ROUTES = ROUTES_OBJ
+}
