@@ -27,29 +27,12 @@ import { SocialShare } from "@/components/social-share"
 import { CommentsSection } from "@/components/comments-section"
 import { FavoriteButton } from "@/components/favorite-button"
 
-interface Video {
-  id: string
-  title: string
-  description: string
-  youtube_url: string
-  thumbnail_url: string
-  category: string
-  duration: string
-  published_date: string
-  artist?: string
-  event_name?: string
-  view_count?: number
-  video_type?: string
-  // Nuevos campos para embeds unificados
-  video_url?: string
-  provider?: string
-  embed_data?: any
-}
+import type { Video as VideoType } from "@/types"
 
 export default function VideoDetailPage() {
   const { id } = useParams()
-  const [video, setVideo] = useState<Video | null>(null)
-  const [relatedVideos, setRelatedVideos] = useState<Video[]>([])
+  const [video, setVideo] = useState<VideoType | null>(null)
+  const [relatedVideos, setRelatedVideos] = useState<VideoType[]>([])
   const [loading, setLoading] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
 

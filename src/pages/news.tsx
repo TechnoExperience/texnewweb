@@ -112,7 +112,7 @@ export default function NewsPage() {
             <div className="relative bg-gradient-to-b from-[#00F9FF]/10 via-black/50 to-black pt-24 pb-12 border-b border-white/5">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     {/* Breadcrumbs */}
-                    <Breadcrumbs items={[{ text: "Inicio", link: "/" }, { text: "Noticias" }]} />
+                    <Breadcrumbs items={[{ label: "Inicio", href: "/" }, { label: "Noticias" }]} />
                     
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
                         <div className="flex-1">

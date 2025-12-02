@@ -54,17 +54,17 @@ export default function ReviewsPage() {
     let filtered = [...reviews]
     
     // Apply date filters
-    if (advancedFilters.dateRange?.from) {
+    if (advancedFilters.dateFrom) {
       filtered = filtered.filter(review => {
-        const reviewDate = new Date(review.published_date || review.created_at)
-        return reviewDate >= advancedFilters.dateRange!.from!
+        const reviewDate = new Date(review.published_date)
+        return reviewDate >= new Date(advancedFilters.dateFrom!)
       })
     }
     
-    if (advancedFilters.dateRange?.to) {
+    if (advancedFilters.dateTo) {
       filtered = filtered.filter(review => {
-        const reviewDate = new Date(review.published_date || review.created_at)
-        return reviewDate <= advancedFilters.dateRange!.to!
+        const reviewDate = new Date(review.published_date)
+        return reviewDate <= new Date(advancedFilters.dateTo!)
       })
     }
     

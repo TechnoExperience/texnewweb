@@ -219,7 +219,7 @@ export default function AdminOrdersPage() {
                       <div>
                         <p className="text-white/70 text-sm mb-1">Dirección</p>
                         <p className="text-white text-sm">
-                          {order.shipping_address?.street || "N/A"}
+                          {order.shipping_address?.street || order.shipping_address?.address_line_1 || "N/A"}
                           {order.shipping_address?.city && `, ${order.shipping_address.city}`}
                         </p>
                       </div>

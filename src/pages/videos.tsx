@@ -64,7 +64,7 @@ export default function VideosPage() {
       // Filtros avanzados - Fecha
       let matchesDate = true
       if (advancedFilters.dateFrom || advancedFilters.dateTo) {
-        const videoDate = new Date(video.video_date || video.published_date)
+        const videoDate = new Date(video.video_date || video.published_date || new Date())
         if (advancedFilters.dateFrom) {
           const fromDate = new Date(advancedFilters.dateFrom)
           fromDate.setHours(0, 0, 0, 0)

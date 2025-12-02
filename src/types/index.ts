@@ -48,6 +48,8 @@ export interface NewsArticle {
     related_artists?: string[]
     related_events?: string[]
     related_releases?: string[]
+    updated_at?: string
+    status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
 }
 
 export interface Event {
@@ -123,6 +125,10 @@ export interface Video {
     video_type?: "aftermovie" | "live_set" | "music_video" | "dj_mix"
     status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
     published_date?: string
+    video_url?: string
+    provider?: string
+    embed_data?: any
+    uploader_id?: string
 }
 
 export interface Review {
@@ -146,6 +152,9 @@ export interface Review {
     featured: boolean
     tags?: string[]
     view_count: number
+    seo_title?: string
+    seo_description?: string
+    seo_focus_keyword?: string
 }
 
 export interface UserProfile {
@@ -164,6 +173,7 @@ export interface UserProfile {
     is_verified?: boolean
     verification_status?: "PENDING" | "APPROVED" | "REJECTED"
     verification_notes?: string
+    created_at?: string
 }
 
 export interface Ad {
@@ -275,6 +285,8 @@ export interface Order {
     order_number: string
     user_id?: string
     email: string
+    customer_name?: string
+    customer_email?: string
     status: OrderStatus
     payment_status: PaymentStatus
     payment_method?: string
@@ -302,6 +314,7 @@ export interface Address {
     company?: string
     address_line_1: string
     address_line_2?: string
+    street?: string // Alias para address_line_1
     city: string
     state?: string
     postal_code: string
