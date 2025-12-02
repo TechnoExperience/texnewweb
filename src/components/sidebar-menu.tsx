@@ -114,10 +114,10 @@ export function SidebarMenu({ isOpen, onClose, onSectionChange }: SidebarMenuPro
                   <Link
                     to={ROUTES.AUTH.SIGNUP}
                     onClick={onClose}
-                    className="w-full rounded-none border border-[#00F9FF] bg-[#00F9FF]/20 hover:bg-[#00F9FF]/30 hover:border-[#00F9FF] flex items-center justify-center gap-2 p-4 transition-all duration-300"
+                    className="w-full rounded-none border border-[#00F9FF] bg-[#00F9FF] hover:bg-[#00D9E6] hover:border-[#00D9E6] flex items-center justify-center gap-2 p-4 transition-all duration-300"
                   >
-                    <UserPlus className="w-4 h-4" />
-                    <span className="font-heading text-white uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                    <UserPlus className="w-4 h-4 text-black" />
+                    <span className="font-heading text-black uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                       Crear Cuenta
                     </span>
                   </Link>

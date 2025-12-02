@@ -35,21 +35,21 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-black/95 backdrop-blur-sm border-b border-white/10">
-      <div className="container mx-auto px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <Logo size="md" className="flex-shrink-0" />
+      <div className="container mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <Logo size="md" className="flex-shrink-0 w-auto sm:w-full" />
           
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             {/* CMS Button - Always visible when in admin routes */}
             {isAdminRoute && (
               <Button
                 asChild
                 size="sm"
-                className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black flex items-center gap-2 flex-shrink-0"
+                className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black font-bold flex items-center gap-1 sm:gap-2 flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
               >
                 <Link to={ROUTES.ADMIN.DASHBOARD}>
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                  <LayoutDashboard className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline sm:inline font-heading uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                     CMS
                   </span>
                 </Link>
@@ -107,11 +107,11 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
                 <Button
                   asChild
                   size="sm"
-                  className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black flex items-center gap-2 flex-shrink-0"
+                  className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black font-bold flex items-center gap-1 sm:gap-2 flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
                 >
                   <Link to={ROUTES.AUTH.SIGNUP}>
-                    <UserPlus className="w-4 h-4" />
-                    <span className="hidden sm:inline font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                    <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden xs:inline sm:inline font-heading uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                       Crear Cuenta
                     </span>
                   </Link>
