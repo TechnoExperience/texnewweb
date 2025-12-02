@@ -154,7 +154,7 @@ export default function VideoDetailPage() {
       <div className="relative z-10">
       {/* Navigation Bar */}
       <div className="sticky top-16 z-30 bg-black/98 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <Button asChild variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
               <Link to={ROUTES.VIDEOS}>
@@ -187,7 +187,7 @@ export default function VideoDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 ">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -439,7 +439,7 @@ export default function VideoDetailPage() {
       {/* Comments Section */}
       {video && (
         <div className="border-t border-white/10 mt-16 pt-12">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+          <div className="w-full px-4 sm:px-6 lg:px-8 ">
             <CommentsSection resourceType="video" resourceId={video.id} />
           </div>
         </div>

@@ -144,7 +144,7 @@ export default function AdminVideosEditPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
+      <div className="w-full px-4 py-6 sm:py-8 ">
         <Card className="mb-6 bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white">{isEditMode ? "Editar vídeo" : "Crear vídeo"}</CardTitle>
@@ -285,7 +285,7 @@ export default function AdminVideosEditPage() {
                   <img
                     src={video.thumbnail_url}
                     alt="Thumbnail"
-                    className="w-full max-w-md h-auto border border-zinc-700"
+                    className="w-full  h-auto border border-zinc-700"
                   />
                 </div>
               )}

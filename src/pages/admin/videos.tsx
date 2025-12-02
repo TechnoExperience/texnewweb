@@ -95,7 +95,7 @@ export default function AdminVideosPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-accent text-white py-12">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -115,7 +115,7 @@ export default function AdminVideosPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         {/* Filtros */}
         <Card className="mb-8">
           <CardContent className="p-6 space-y-4">

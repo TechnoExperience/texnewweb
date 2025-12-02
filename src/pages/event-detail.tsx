@@ -116,7 +116,7 @@ export default function EventDetailPage() {
 
         {/* Navigation Bar */}
         <div className="absolute top-0 left-0 right-0 z-20 p-6">
-          <div className="container mx-auto flex items-center justify-between">
+          <div className="w-full flex items-center justify-between">
             <Link
               to={ROUTES.EVENTS}
               className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors rounded-none border border-white/20"
@@ -150,7 +150,7 @@ export default function EventDetailPage() {
 
         {/* Hero Content */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-6 lg:p-12">
-          <div className="container mx-auto max-w-6xl">
+          <div className="w-full ">
             {/* Date Badge */}
             <div className="mb-6 flex items-center gap-4 flex-wrap">
               <div className="px-6 py-3 bg-[#00F9FF] border-2 border-white/30 backdrop-blur-sm">
@@ -233,7 +233,7 @@ export default function EventDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-6xl">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12 ">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -257,7 +257,7 @@ export default function EventDetailPage() {
                 </h2>
               </div>
               <div 
-                className="text-white/80 font-space leading-relaxed text-base prose prose-invert max-w-none"
+                className="text-white/80 font-space leading-relaxed text-base prose prose-invert "
                 dangerouslySetInnerHTML={{ __html: event.description || "No hay descripción disponible." }}
               />
             </section>

@@ -202,7 +202,7 @@ export default function EventsPage() {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">Eventos</h1>
           </div>
-          <p className="text-white/60 text-sm sm:text-base max-w-2xl">
+          <p className="text-white/60 text-sm sm:text-base ">
             Descubre los próximos eventos de techno en tu ciudad y alrededor del mundo
           </p>
         </div>

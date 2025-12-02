@@ -103,14 +103,14 @@ export default function ReviewsPage() {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold">Reviews</h1>
           </div>
-          <p className="text-white/60 text-sm sm:text-base max-w-2xl">
+          <p className="text-white/60 text-sm sm:text-base ">
             Análisis y críticas de eventos, lanzamientos y la escena techno
           </p>
         </div>
       </div>
 
       {/* Advanced Filters */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <AdvancedFilters
           type="reviews"
           onFilterChange={setAdvancedFilters}
@@ -119,7 +119,7 @@ export default function ReviewsPage() {
 
       {/* Filters - Sticky */}
       <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-2 min-w-max">

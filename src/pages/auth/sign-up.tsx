@@ -61,8 +61,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
+    <div className="w-full px-4 py-16 flex items-center justify-center min-h-[calc(100vh-200px)]">
+      <Card className="w-full  bg-zinc-900 border-zinc-800">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-white">Crear Cuenta</CardTitle>
           <CardDescription className="text-zinc-400">Crea tu cuenta para acceder a todo el contenido</CardDescription>

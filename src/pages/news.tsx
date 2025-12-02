@@ -130,7 +130,7 @@ export default function NewsPage() {
                                     >
                                         NOTICIAS
                                     </h1>
-                                    <p className="text-white/60 text-lg max-w-2xl">
+                                    <p className="text-white/60 text-lg ">
                                         Mantente al día con las últimas novedades, lanzamientos y entrevistas del mundo techno
                                     </p>
                                 </div>

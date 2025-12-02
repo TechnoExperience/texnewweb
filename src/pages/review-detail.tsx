@@ -157,7 +157,7 @@ export default function ReviewDetailPage() {
 
         {/* Navigation */}
         <div className="absolute top-0 left-0 right-0 z-20 p-6">
-          <div className="container mx-auto flex items-center justify-between">
+          <div className="w-full flex items-center justify-between">
             <Link
               to={ROUTES.REVIEWS}
               className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors rounded-none border border-white/20"
@@ -191,7 +191,7 @@ export default function ReviewDetailPage() {
 
         {/* Hero Content */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-6 lg:p-12">
-          <div className="container mx-auto max-w-6xl">
+          <div className="w-full ">
             <div className="mb-6 flex items-center gap-4 flex-wrap">
               <Badge className="px-4 py-2 bg-[#00F9FF] text-white border-0">
                 {review.category}
@@ -217,7 +217,7 @@ export default function ReviewDetailPage() {
               {review.title}
             </h1>
 
-            <p className="text-white/80 text-lg md:text-xl font-space max-w-3xl mb-6">
+            <p className="text-white/80 text-lg md:text-xl font-space  mb-6">
               {review.excerpt}
             </p>
 
@@ -255,7 +255,7 @@ export default function ReviewDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-6xl">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12 ">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -270,7 +270,7 @@ export default function ReviewDetailPage() {
             {/* Review Content */}
             <article className="bg-white/5 border border-white/10 p-8">
               <div 
-                className="prose prose-invert max-w-none text-white/80 font-space leading-relaxed text-base"
+                className="prose prose-invert  text-white/80 font-space leading-relaxed text-base"
                 dangerouslySetInnerHTML={{ __html: review.content || review.excerpt || "No hay contenido disponible." }}
               />
             </article>

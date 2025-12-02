@@ -278,7 +278,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-black relative">
       <AnimatedBackground />
-      <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
+      <div className="relative z-10 w-full px-4 py-12 ">
         {/* Header */}
         <div className="mb-8">
           <Button

@@ -112,7 +112,7 @@ export default function ProfileSelectionPage() {
 
     return (
         <div className="min-h-screen bg-[#050315] flex items-center justify-center p-4">
-            <div className="max-w-5xl w-full space-y-8">
+            <div className=" w-full space-y-8">
                 <div className="text-center space-y-4">
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
@@ -125,7 +125,7 @@ export default function ProfileSelectionPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.1 }}
-                        className="text-gray-400 text-lg max-w-2xl mx-auto"
+                        className="text-gray-400 text-lg  mx-auto"
                     >
                         Select the profile type that best describes you to customize your experience on Techno Experience.
                     </motion.p>

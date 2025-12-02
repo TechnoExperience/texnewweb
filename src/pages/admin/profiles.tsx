@@ -88,7 +88,7 @@ export default function AdminProfilesPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="w-full px-4 py-8 ">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1

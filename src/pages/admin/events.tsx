@@ -97,7 +97,7 @@ export default function AdminEventsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="text-center text-zinc-400">{t("common.loading")}</div>
       </div>
     );
@@ -105,7 +105,7 @@ export default function AdminEventsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-white" />

@@ -146,7 +146,7 @@ export default function ReleaseDetailPage() {
       {/* Floating Back Button */}
       <FloatingBackButton />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8  py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -581,7 +581,7 @@ export default function ReleaseDetailPage() {
       {/* Comments Section */}
       {release && (
         <div className="border-t border-white/10 mt-16 pt-12">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+          <div className="w-full px-4 sm:px-6 lg:px-8 ">
             <CommentsSection resourceType="release" resourceId={release.id} />
           </div>
         </div>

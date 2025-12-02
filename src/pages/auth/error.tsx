@@ -5,8 +5,8 @@ import { AlertCircle } from "lucide-react"
 
 export default function ErrorPage() {
   return (
-    <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 text-center">
+    <div className="w-full px-4 py-16 flex items-center justify-center min-h-[calc(100vh-200px)]">
+      <Card className="w-full  bg-zinc-900 border-zinc-800 text-center">
         <CardHeader className="space-y-4">
           <div className="mx-auto w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
             <AlertCircle className="h-8 w-8 text-red-500" />

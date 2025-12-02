@@ -102,7 +102,7 @@ export default function StorePage() {
               </h1>
               <div className="w-16 h-1 bg-[#00F9FF] transform -rotate-12" />
             </div>
-            <p className="text-white/70 font-space text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="text-white/70 font-space text-lg md:text-xl  mx-auto">
               Merchandising oficial de TECHNO EXPERIENCE - Diseño exclusivo y calidad premium
             </p>
             <div className="flex items-center justify-center gap-2 mt-6">

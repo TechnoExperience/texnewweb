@@ -152,7 +152,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-black">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-accent text-white py-12">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-8 h-8" />
             <Badge className="bg-white/20 text-white border-white/30">Admin</Badge>
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         {/* Stats Grid - Responsive */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {statCards.map((stat, index) => (

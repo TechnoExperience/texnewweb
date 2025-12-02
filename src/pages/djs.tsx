@@ -49,7 +49,7 @@ export default function DJsPage() {
         {/* Hero Header */}
         <div className="relative py-20 md:py-28 overflow-hidden border-b border-white/10">
           <div className="absolute inset-0 bg-gradient-to-br from-[#00F9FF]/5 via-transparent to-transparent" />
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-1 bg-[#00F9FF] transform rotate-12" />
               <Music2 className="w-12 h-12 text-[#00F9FF]" />
@@ -63,7 +63,7 @@ export default function DJsPage() {
             >
               DJS
             </h1>
-            <p className="text-white/60 font-space text-lg md:text-xl max-w-2xl" style={{ textShadow: "0 2px 8px rgba(0, 0, 0, 0.6)" }}>
+            <p className="text-white/60 font-space text-lg md:text-xl " style={{ textShadow: "0 2px 8px rgba(0, 0, 0, 0.6)" }}>
               Descubre los artistas de la escena techno
             </p>
           </div>
@@ -71,8 +71,8 @@ export default function DJsPage() {
 
         {/* Search Bar */}
         <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="relative max-w-xl">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+            <div className="relative ">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-5 h-5" />
               <Input
                 placeholder="Buscar DJs por nombre, ciudad o país..."
@@ -85,7 +85,7 @@ export default function DJsPage() {
         </div>
 
         {/* DJs Grid */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
           {filteredDJs.length === 0 ? (
             <div className="text-center py-20">
               <Music2 className="w-16 h-16 text-white/20 mx-auto mb-4" />

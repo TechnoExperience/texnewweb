@@ -11,7 +11,7 @@ export default function CheckoutErrorPage() {
   return (
     <div className="min-h-screen bg-black relative">
       <AnimatedBackground />
-      <div className="relative z-10 container mx-auto px-4 py-12 max-w-2xl">
+      <div className="relative z-10 w-full px-4 py-12 ">
         <div className="bg-white/5 border border-white/10 p-8 text-center">
           <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <X className="w-12 h-12 text-white" />

@@ -172,7 +172,7 @@ export default function ReleasesPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-white/70 text-base sm:text-lg mt-2 max-w-2xl"
+                className="text-white/70 text-base sm:text-lg mt-2 "
               >
                 Descubre los últimos lanzamientos de la escena techno underground
               </motion.p>

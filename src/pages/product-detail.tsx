@@ -131,7 +131,7 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-black">
       {/* Navigation Bar */}
       <div className="sticky top-16 z-30 bg-black/98 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <Button asChild variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
               <Link to={ROUTES.STORE}>
@@ -164,7 +164,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-7xl">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12 ">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Product Images */}
           <div className="space-y-6">

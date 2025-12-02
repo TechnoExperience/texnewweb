@@ -220,7 +220,7 @@ export default function AdminProductsEditPage() {
     <div className="min-h-screen bg-black">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#00F9FF] to-[#00D9E6] text-black py-8 md:py-12">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -238,7 +238,7 @@ export default function AdminProductsEditPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="w-full px-4 py-8 ">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Información Básica */}
           <Card className="bg-zinc-900 border-zinc-800">

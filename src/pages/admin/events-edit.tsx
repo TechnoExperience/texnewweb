@@ -139,7 +139,7 @@ export default function AdminEventsEditPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl">
+      <div className="w-full px-4 py-6 sm:py-8 ">
         <Card className="mb-6 bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-white">{isEditMode ? "Editar evento" : "Crear evento"}</CardTitle>
@@ -235,7 +235,7 @@ export default function AdminEventsEditPage() {
                 <label className="block text-sm font-medium mb-1 text-white">Imagen de portada</label>
                 <Input type="file" accept="image/*" onChange={handleCoverUpload} />
                 {event.image_url && (
-                  <img src={event.image_url} alt="Portada" className="mt-2 w-full max-w-md h-auto border border-zinc-700" />
+                  <img src={event.image_url} alt="Portada" className="mt-2 w-full  h-auto border border-zinc-700" />
                 )}
               </div>
               <div>
