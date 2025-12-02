@@ -1,0 +1,33 @@
+// Application routes
+export const ROUTES = {
+    HOME: "/",
+    NEWS: "/news",
+    EVENTS: "/events",
+    RELEASES: "/releases",
+    VIDEOS: "/videos",
+    REVIEWS: "/reviews",
+    STORE: "/store",
+    PRODUCT: "/store/:id",
+    CHECKOUT: "/checkout",
+    AUTH: {
+        LOGIN: "/auth/login",
+        SIGNUP: "/auth/sign-up",
+        SIGNUP_SUCCESS: "/auth/sign-up-success",
+        ERROR: "/auth/error",
+    },
+    PROFILE: "/profile",
+    DJS: "/djs",
+    ADMIN: {
+        DASHBOARD: "/admin",
+        NEWS: "/admin/news",
+        EVENTS: "/admin/events",
+        RELEASES: "/admin/releases",
+        VIDEOS: "/admin/videos",
+        REVIEWS: "/admin/reviews",
+        PROFILES: "/admin/profiles",
+        PRODUCTS: "/admin/products",
+        CATEGORIES: "/admin/categories",
+        ORDERS: "/admin/orders",
+        USERS: "/admin/users",
+    },
+} as const

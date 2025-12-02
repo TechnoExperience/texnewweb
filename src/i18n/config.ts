@@ -12,9 +12,17 @@ const resources = {
   it: { translation: it },
 }
 
+// Safe access to localStorage for SSR compatibility
+const getStoredLanguage = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("language") || "es"
+  }
+  return "es"
+}
+
 i18n.use(initReactI18next).init({
   resources,
-  lng: localStorage.getItem("language") || "es",
+  lng: getStoredLanguage(),
   fallbackLng: "es",
   interpolation: {
     escapeValue: false,
@@ -22,3 +30,4 @@ i18n.use(initReactI18next).init({
 })
 
 export default i18n
+

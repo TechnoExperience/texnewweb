@@ -1,91 +1,117 @@
-"use client"
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Search, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, Search, Plus, Edit, Trash2, Eye } from "lucide-react"
-import { Link } from "react-router-dom"
-import { format } from "date-fns"
-
-interface Event {
-  id: string
-  title: string
-  slug: string
-  city: string
-  country: string
-  event_date: string
-  status: string
-  cover_image: string
-}
+import type { Event } from "@/types";
 
 export default function AdminEventsPage() {
-  const { t } = useTranslation()
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const { t } = useTranslation();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
-    fetchEvents()
-  }, [])
+    fetchEvents();
+  }, []);
 
   async function fetchEvents() {
-    const query = supabase
+    const { data, error } = await supabase
       .from("events")
-      .select("id, title, slug, city, country, event_date, status, cover_image")
-      .order("event_date", { ascending: false })
-
-    const { data, error } = await query
-
+      .select("*")
+      .order("event_date", { ascending: false });
     if (error) {
-      console.error("Error fetching events:", error)
+      console.error("Error fetching events:", error);
     } else {
-      setEvents(data || [])
+      // Calculate status and map image_url
+      const eventsWithStatus = (data || []).map((event: any) => ({
+        ...event,
+        status: new Date(event.event_date) > new Date() ? "upcoming" : "past",
+        cover_image: event.image_url // Map image_url to cover_image if needed, or just use image_url
+      }));
+      setEvents(eventsWithStatus);
     }
-    setLoading(false)
+    setLoading(false);
   }
 
   async function deleteEvent(id: string) {
-    if (!confirm(t("cms.confirmDelete"))) return
-
-    const { error } = await supabase.from("events").delete().eq("id", id)
-
+    if (!confirm(t("cms.confirmDelete"))) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) {
-      console.error("Error deleting event:", error)
-      alert("Error al eliminar el evento")
+      console.error("Error deleting event:", error);
+      alert("Error al eliminar el evento");
     } else {
-      setEvents(events.filter((event) => event.id !== id))
+      setEvents(events.filter((e) => e.id !== id));
+    }
+  }
+
+  async function toggleFeatured(event: Event) {
+    const { error } = await supabase
+      .from("events")
+      .update({ featured: !event.featured })
+      .eq("id", event.id);
+    if (error) {
+      console.error("Error toggling featured:", error);
+      alert("Error al actualizar featured");
+    } else {
+      setEvents(
+        events.map((e) =>
+          e.id === event.id ? { ...e, featured: !e.featured } : e
+        )
+      );
+    }
+  }
+
+  async function toggleHeaderFeatured(event: Event) {
+    const { error } = await supabase
+      .from("events")
+      .update({ header_featured: !event.header_featured })
+      .eq("id", event.id);
+    if (error) {
+      console.error("Error toggling header featured:", error);
+      alert("Error al actualizar evento a cabecera");
+    } else {
+      setEvents(
+        events.map((e) =>
+          e.id === event.id ? { ...e, header_featured: !e.header_featured } : e
+        )
+      );
     }
   }
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.city.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || event.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+      event.city.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || event.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center text-zinc-400">{t("common.loading")}</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-black">
+      <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-white" />
           <h1 className="text-3xl font-bold text-white">{t("cms.manageEvents")}</h1>
         </div>
-        <Button asChild className="bg-white text-black hover:bg-zinc-200">
+        <Button asChild className="bg-[#00F9FF] text-black hover:bg-[#00D9E6]">
           <Link to="/admin/events/new">
             <Plus className="h-4 w-4 mr-2" />
             {t("cms.createEvent")}
@@ -98,7 +124,7 @@ export default function AdminEventsPage() {
           <CardTitle className="text-white">{t("cms.filters")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
@@ -110,7 +136,7 @@ export default function AdminEventsPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {["all", "upcoming", "past", "cancelled"].map((status) => (
                 <Button
                   key={status}
@@ -119,7 +145,7 @@ export default function AdminEventsPage() {
                   onClick={() => setStatusFilter(status)}
                   className={
                     statusFilter === status
-                      ? "bg-white text-black hover:bg-zinc-200"
+                      ? "bg-[#00F9FF] text-black hover:bg-[#00D9E6]"
                       : "border-zinc-700 text-white hover:bg-zinc-800 bg-transparent"
                   }
                 >
@@ -131,9 +157,9 @@ export default function AdminEventsPage() {
         </CardContent>
       </Card>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-none overflow-hidden">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-zinc-800">
               <tr>
                 <th className="text-left p-4 text-zinc-400 font-medium">{t("cms.cover")}</th>
@@ -141,6 +167,8 @@ export default function AdminEventsPage() {
                 <th className="text-left p-4 text-zinc-400 font-medium">{t("cms.location")}</th>
                 <th className="text-left p-4 text-zinc-400 font-medium">{t("cms.date")}</th>
                 <th className="text-left p-4 text-zinc-400 font-medium">{t("cms.status")}</th>
+                <th className="text-left p-4 text-zinc-400 font-medium">{t("cms.featured")}</th>
+                <th className="text-left p-4 text-zinc-400 font-medium">Cabecera</th>
                 <th className="text-right p-4 text-zinc-400 font-medium">{t("cms.actions")}</th>
               </tr>
             </thead>
@@ -161,7 +189,9 @@ export default function AdminEventsPage() {
                   <td className="p-4 text-zinc-300">
                     {event.city}, {event.country}
                   </td>
-                  <td className="p-4 text-zinc-300">{format(new Date(event.event_date), "dd/MM/yyyy HH:mm")}</td>
+                  <td className="p-4 text-zinc-300">
+                    {format(new Date(event.event_date), "dd/MM/yyyy HH:mm")}
+                  </td>
                   <td className="p-4">
                     <Badge
                       className={
@@ -176,6 +206,37 @@ export default function AdminEventsPage() {
                     </Badge>
                   </td>
                   <td className="p-4">
+                    <Badge
+                      className={event.featured ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"}
+                    >
+                      {event.featured ? t("cms.yes") : t("cms.no")}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-2 text-zinc-400 hover:text-white"
+                      onClick={() => toggleFeatured(event)}
+                    >
+                      {event.featured ? t("cms.unfeature") : t("cms.feature")}
+                    </Button>
+                  </td>
+                  <td className="p-4">
+                    <Badge
+                      className={(event as any).header_featured ? "bg-[#00F9FF]/20 text-[#00F9FF] border-[#00F9FF]/50" : "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"}
+                    >
+                      {(event as any).header_featured ? "Sí" : "No"}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="ml-2 text-zinc-400 hover:text-[#00F9FF]"
+                      onClick={() => toggleHeaderFeatured(event)}
+                      title="Evento a cabecera (aparece en el carrusel de eventos recomendados)"
+                    >
+                      {(event as any).header_featured ? "Quitar" : "Añadir"}
+                    </Button>
+                  </td>
+                  <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button size="sm" variant="ghost" className="text-zinc-400 hover:text-white" asChild>
                         <Link to={`/events/${event.slug}`} target="_blank">
@@ -210,6 +271,7 @@ export default function AdminEventsPage() {
           <p className="text-zinc-400">{t("cms.noEventsFound")}</p>
         </div>
       )}
+      </div>
     </div>
-  )
+  );
 }

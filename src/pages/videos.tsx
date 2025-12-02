@@ -1,147 +1,184 @@
-"use client"
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { supabase } from "@/lib/supabase"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useCallback, useMemo } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Play, Clock } from "lucide-react"
 import { useTranslation } from "react-i18next"
-
-interface Video {
-  id: string
-  title: string
-  description: string
-  youtube_url: string
-  thumbnail_url: string
-  artist: string
-  event_name: string
-  video_date: string
-  duration: number
-  category: string
-  language: string
-  featured: boolean
-  view_count: number
-}
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ErrorMessage } from "@/components/ui/error-message"
+import { VideoCard } from "@/components/video-card"
+import { EmptyState } from "@/components/ui/empty-state"
+import { VideosBackground } from "@/components/backgrounds/videos-background"
+import { Video } from "lucide-react"
+import { TABLES } from "@/constants/tables"
+import type { Video as VideoType } from "@/types"
+import { AdvancedFilters, type FilterState } from "@/components/advanced-filters"
 
 export default function VideosPage() {
   const { t, i18n } = useTranslation()
-  const [djSets, setDjSets] = useState<Video[]>([])
-  const [shortVideos, setShortVideos] = useState<Video[]>([])
-  const [loading, setLoading] = useState(true)
+  const [advancedFilters, setAdvancedFilters] = useState<FilterState>({
+    search: "",
+    datePreset: "all",
+  })
 
-  useEffect(() => {
-    async function fetchVideos() {
-      const { data: djSetData } = await supabase
-        .from("videos")
-        .select("*")
-        .eq("category", "dj_set")
-        .eq("language", i18n.language)
-        .order("video_date", { ascending: false })
-
-      const { data: shortVideoData } = await supabase
-        .from("videos")
-        .select("*")
-        .eq("category", "short_video")
-        .eq("language", i18n.language)
-        .order("video_date", { ascending: false })
-
-      setDjSets(djSetData || [])
-      setShortVideos(shortVideoData || [])
-      setLoading(false)
-    }
-
-    fetchVideos()
-  }, [i18n.language])
-
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, "0")}:00`
-    }
-    return `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`
-  }
-
-  const VideoCard = ({ video }: { video: Video }) => (
-    <Link key={video.id} to={`/videos/${video.id}`}>
-      <Card className="bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors overflow-hidden group">
-        <div className="relative aspect-video overflow-hidden">
-          <img
-            src={video.thumbnail_url || "/placeholder.svg?height=480&width=854"}
-            alt={video.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Play className="h-12 w-12 text-white" fill="white" />
-          </div>
-          <div className="absolute bottom-2 right-2 bg-black/90 px-2 py-1 rounded text-xs text-white flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {formatDuration(video.duration)}
-          </div>
-          {video.featured && (
-            <div className="absolute top-2 left-2 bg-white text-black px-2 py-1 rounded text-xs font-bold">
-              {t("cms.featured")}
-            </div>
-          )}
-        </div>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-white text-base mb-1 line-clamp-2 group-hover:text-zinc-300 transition-colors">
-            {video.title}
-          </h3>
-          <p className="text-sm text-zinc-400 mb-2">{video.artist}</p>
-          {video.event_name && <p className="text-xs text-zinc-500 mb-2">{video.event_name}</p>}
-          <p className="text-xs text-zinc-400 line-clamp-2">{video.description}</p>
-        </CardContent>
-      </Card>
-    </Link>
+  // Cargar TODOS los videos sin filtros restrictivos de categoría/lenguaje
+  const allVideosQuery = useCallback(
+    (query: any) => query.order("video_date", { ascending: false }),
+    []
   )
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-zinc-400">{t("common.loading")}</div>
-      </div>
-    )
+  const djSetsQuery = useCallback(
+    (query: any) =>
+      query
+        .eq("category", "dj_set")
+        .order("video_date", { ascending: false }),
+    []
+  )
+
+  const shortVideosQuery = useCallback(
+    (query: any) =>
+      query
+        .eq("category", "short_video")
+        .order("video_date", { ascending: false }),
+    []
+  )
+
+  // Cargar TODOS los videos primero (sin filtros)
+  const { data: allVideos, loading: loadingAll } = useSupabaseQuery<VideoType>(
+    TABLES.VIDEOS,
+    allVideosQuery
+  )
+
+  // Cargar videos filtrados por categoría
+  const { data: djSets, loading: loadingDj, error: errorDj } = useSupabaseQuery<VideoType>(
+    TABLES.VIDEOS,
+    djSetsQuery
+  )
+
+  const { data: shortVideos, loading: loadingShort, error: errorShort } = useSupabaseQuery<VideoType>(
+    TABLES.VIDEOS,
+    shortVideosQuery
+  )
+
+  // Función para aplicar filtros avanzados
+  const applyAdvancedFilters = (videos: VideoType[]) => {
+    return videos.filter(video => {
+      // Filtros avanzados - Fecha
+      let matchesDate = true
+      if (advancedFilters.dateFrom || advancedFilters.dateTo) {
+        const videoDate = new Date(video.video_date || video.published_date)
+        if (advancedFilters.dateFrom) {
+          const fromDate = new Date(advancedFilters.dateFrom)
+          fromDate.setHours(0, 0, 0, 0)
+          if (videoDate < fromDate) matchesDate = false
+        }
+        if (advancedFilters.dateTo) {
+          const toDate = new Date(advancedFilters.dateTo)
+          toDate.setHours(23, 59, 59, 999)
+          if (videoDate > toDate) matchesDate = false
+        }
+      }
+
+      // Búsqueda avanzada
+      const search = advancedFilters.search || ""
+      const matchesSearch = !search ||
+        video.title.toLowerCase().includes(search.toLowerCase()) ||
+        video.description?.toLowerCase().includes(search.toLowerCase()) ||
+        video.artist?.toLowerCase().includes(search.toLowerCase())
+
+      return matchesDate && matchesSearch
+    })
+  }
+
+  // Usar todos los videos si no hay datos filtrados, pero aplicar filtros en frontend
+  const djSetsToShow = useMemo(() => {
+    let videos: VideoType[] = []
+    if (djSets && djSets.length > 0) {
+      videos = djSets
+    } else if (allVideos && allVideos.length > 0) {
+      videos = allVideos.filter(v => v.category === "dj_set" || v.video_type === "dj_mix" || v.video_type === "live_set")
+    }
+    return applyAdvancedFilters(videos)
+  }, [djSets, allVideos, advancedFilters])
+
+  const shortVideosToShow = useMemo(() => {
+    let videos: VideoType[] = []
+    if (shortVideos && shortVideos.length > 0) {
+      videos = shortVideos
+    } else if (allVideos && allVideos.length > 0) {
+      videos = allVideos.filter(v => v.category === "short_video" || v.video_type === "music_video" || v.video_type === "aftermovie")
+    }
+    return applyAdvancedFilters(videos)
+  }, [shortVideos, allVideos, advancedFilters])
+
+  const loading = loadingDj || loadingShort || loadingAll
+  const error = errorDj || errorShort
+
+  // Mostrar loading solo si realmente está cargando y no hay datos en cache
+  if (loading && ((!djSetsToShow || djSetsToShow.length === 0) && (!shortVideosToShow || shortVideosToShow.length === 0) && (!allVideos || allVideos.length === 0))) {
+    return <LoadingSpinner />
+  }
+  
+  // Mostrar error solo si no hay datos disponibles en absoluto
+  if (error && ((!djSetsToShow || djSetsToShow.length === 0) && (!shortVideosToShow || shortVideosToShow.length === 0) && (!allVideos || allVideos.length === 0))) {
+    return <ErrorMessage message="Error al cargar los videos" />
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-white mb-8">{t("videos.title")}</h1>
+    <div className="min-h-screen bg-black relative">
+      <VideosBackground />
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-white mb-8">{t("videos.title")}</h1>
+
+        {/* Advanced Filters */}
+        <div className="mb-8">
+          <AdvancedFilters
+            type="videos"
+            onFilterChange={setAdvancedFilters}
+          />
+        </div>
 
       <Tabs defaultValue="dj-sets" className="w-full">
         <TabsList className="bg-zinc-900 border border-zinc-800 mb-8">
           <TabsTrigger value="dj-sets" className="data-[state=active]:bg-white data-[state=active]:text-black">
-            {t("videos.djSets")} ({djSets.length})
+            {t("videos.djSets")} ({djSetsToShow.length})
           </TabsTrigger>
           <TabsTrigger value="short-videos" className="data-[state=active]:bg-white data-[state=active]:text-black">
-            {t("videos.shortVideos")} ({shortVideos.length})
+            {t("videos.shortVideos")} ({shortVideosToShow.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dj-sets">
-          {djSets.length === 0 ? (
-            <div className="text-center text-zinc-400 py-12">No hay DJ sets disponibles</div>
+          {!djSetsToShow || djSetsToShow.length === 0 ? (
+            <EmptyState
+              icon={Video}
+              title="No hay DJ sets disponibles"
+              description="Próximamente habrá más contenido disponible"
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {djSets.map((video) => (
-                <VideoCard key={video.id} video={video} />
+              {djSetsToShow.map((video, index) => (
+                <VideoCard key={video.id} video={video} index={index} />
               ))}
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="short-videos">
-          {shortVideos.length === 0 ? (
-            <div className="text-center text-zinc-400 py-12">No hay videos cortos disponibles</div>
+          {!shortVideosToShow || shortVideosToShow.length === 0 ? (
+            <EmptyState
+              icon={Video}
+              title="No hay videos cortos disponibles"
+              description="Próximamente habrá más contenido disponible"
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {shortVideos.map((video) => (
-                <VideoCard key={video.id} video={video} />
+              {shortVideosToShow.map((video, index) => (
+                <VideoCard key={video.id} video={video} index={index} />
               ))}
             </div>
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   )
 }

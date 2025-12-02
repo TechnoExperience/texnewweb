@@ -1,0 +1,14 @@
+# robots.txt para TECHNO EXPERIENCE
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /checkout/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://technoexperience.com/sitemap.xml
+
+# Crawl-delay (opcional, para no sobrecargar el servidor)
+Crawl-delay: 1
+

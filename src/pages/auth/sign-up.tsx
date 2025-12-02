@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 
 import { useState } from "react"
@@ -33,13 +31,22 @@ export default function SignUpPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/sign-up-success`,
+        data: {
+          // Datos adicionales que se pueden usar después
+        }
       },
     })
+
+    // Si el registro fue exitoso, crear el perfil con username (si se proporciona)
+    if (!error && authData.user) {
+      // El username se puede agregar después en el perfil
+      // Por ahora solo creamos el perfil básico
+    }
 
     if (error) {
       console.error("[v0] Sign up error:", error)

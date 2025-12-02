@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useTranslation } from "react-i18next"
