@@ -86,7 +86,7 @@ export default function NewsDetailPage() {
       // Intentar buscar con cada variación del slug
       for (const slug of uniqueSlugs) {
         try {
-          // Primero intentar búsqueda exacta
+          // Primero intentar búsqueda exacta con join a profiles si existe created_by
           let { data, error: queryError } = await supabase
             .from(TABLES.NEWS)
             .select("*")
