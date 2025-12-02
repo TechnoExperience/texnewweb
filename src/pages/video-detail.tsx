@@ -263,7 +263,7 @@ export default function VideoDetailPage() {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {format(new Date(video.published_date), "d 'de' MMMM, yyyy", { locale: es })}
+                      {format(new Date(video.published_date || video.video_date), "d 'de' MMMM, yyyy", { locale: es })}
                     </span>
                   </div>
                 </div>
