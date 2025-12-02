@@ -180,13 +180,10 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Configuración: Solo ciudades principales de España (reducir peticiones)
+    // Configuración: Solo 2 ciudades principales para evitar timeout (puedes aumentar después)
     const TARGET_CITIES = [
       { city: 'Madrid', area: 'madrid' },
       { city: 'Barcelona', area: 'barcelona' },
-      { city: 'Valencia', area: 'valencia' },
-      { city: 'Sevilla', area: 'sevilla' },
-      { city: 'Bilbao', area: 'bilbao' },
     ]
 
     // Rate limiter: máximo 10 peticiones por hora (muy conservador)
@@ -250,7 +247,7 @@ Deno.serve(async (req) => {
           }
         }
         
-        return events.slice(0, 20) // Limitar a 20 eventos por ciudad
+        return events.slice(0, 10) // Limitar a 10 eventos por ciudad para evitar timeout
       } catch (error) {
         console.error(`Error en RSS para ${city}:`, error)
         return await fetchRAEventsGraphQL(city)
@@ -374,16 +371,16 @@ Deno.serve(async (req) => {
               totalCreated++
             }
 
-            // Delay humano entre eventos (500ms - 1.5s)
-            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
+            // Delay más corto entre eventos (200ms - 800ms) para evitar timeout
+            await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 600))
           } catch (eventError) {
             errors.push(`${city} - Evento: ${eventError instanceof Error ? eventError.message : String(eventError)}`)
           }
         }
 
-        // Delay más largo entre ciudades (5-10 segundos)
+        // Delay más corto entre ciudades (2-4 segundos) para evitar timeout
         if (i < TARGET_CITIES.length - 1) {
-          const delay = 5000 + Math.random() * 5000
+          const delay = 2000 + Math.random() * 2000
           console.log(`   ⏳ Esperando ${Math.round(delay / 1000)}s antes de la siguiente ciudad...`)
           await new Promise(resolve => setTimeout(resolve, delay))
         }
