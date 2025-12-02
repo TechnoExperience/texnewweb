@@ -1,21 +1,48 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Validar y corregir URL de Supabase si es necesario
+if (supabaseUrl) {
+  // Si la URL contiene 'supabase.com/dashboard', es incorrecta
+  if (supabaseUrl.includes('supabase.com/dashboard')) {
+    console.error("❌ URL de Supabase incorrecta detectada:", supabaseUrl)
+    console.error("💡 La URL debe ser: https://cfgfshoobuvycrbhnvkd.supabase.co")
+    // Extraer el project ID de la URL incorrecta
+    const projectIdMatch = supabaseUrl.match(/project\/([^\/]+)/)
+    if (projectIdMatch) {
+      const projectId = projectIdMatch[1]
+      supabaseUrl = `https://${projectId}.supabase.co`
+      console.warn("⚠️ URL corregida automáticamente a:", supabaseUrl)
+    }
+  }
+  
+  // Limpiar la URL: remover trailing slash y /rest/v1 si existe
+  supabaseUrl = supabaseUrl.replace(/\/rest\/v1.*$/, '').replace(/\/$/, '')
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   const errorMessage = import.meta.env.PROD
-    ? "Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables."
+    ? "Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables. URL must be: https://cfgfshoobuvycrbhnvkd.supabase.co"
     : "Missing Supabase environment variables. Please check .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set."
   
   console.error("❌ Supabase Configuration Error:", errorMessage)
   console.error("📋 Current environment:", {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseAnonKey,
+    url: supabaseUrl,
     env: import.meta.env.MODE,
   })
   
   throw new Error(errorMessage)
+}
+
+// Validar formato de URL
+if (!supabaseUrl.match(/^https:\/\/[a-z0-9-]+\.supabase\.co$/)) {
+  console.error("❌ Formato de URL de Supabase incorrecto:", supabaseUrl)
+  console.error("✅ Formato correcto: https://[project-id].supabase.co")
+  console.error("💡 Ejemplo: https://cfgfshoobuvycrbhnvkd.supabase.co")
 }
 
 // Configuración optimizada del cliente Supabase
