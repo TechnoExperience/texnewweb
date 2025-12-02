@@ -2,7 +2,7 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --ignore-scripts=false",
   "rewrites": [
     {
       "source": "/(.*)",
