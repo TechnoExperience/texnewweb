@@ -76,7 +76,7 @@ function AppComponent() {
   const isHomePage = location.pathname === ROUTES.HOME
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-black overflow-x-hidden w-full">
       <SidebarMenu 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)}
@@ -92,7 +92,7 @@ function AppComponent() {
           currentSection={currentSection}
         />
       )}
-      <main className="flex-1" style={{ overflow: 'visible', minHeight: 0 }}>
+      <main className="flex-1 overflow-x-hidden w-full" style={{ minHeight: 0 }}>
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/coming-soon" element={<ComingSoonPage />} />
