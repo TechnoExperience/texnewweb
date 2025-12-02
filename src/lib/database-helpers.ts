@@ -9,7 +9,7 @@ import { supabase } from "./supabase"
  * Obtiene noticias con información del autor (si existe created_by)
  */
 export async function getNewsWithAuthor(newsId?: string) {
-  let query = supabase
+  let query: any = supabase
     .from("news")
     .select(`
       *,
@@ -32,7 +32,7 @@ export async function getNewsWithAuthor(newsId?: string) {
  * Obtiene eventos con información relacionada
  */
 export async function getEventsWithDetails(eventId?: string) {
-  let query = supabase
+  let query: any = supabase
     .from("events")
     .select(`
       *,
@@ -55,7 +55,7 @@ export async function getEventsWithDetails(eventId?: string) {
  * Obtiene releases con información del artista
  */
 export async function getReleasesWithArtist(releaseId?: string) {
-  let query = supabase
+  let query: any = supabase
     .from("dj_releases")
     .select(`
       *,
@@ -78,7 +78,7 @@ export async function getReleasesWithArtist(releaseId?: string) {
  * Obtiene videos con información del creador
  */
 export async function getVideosWithCreator(videoId?: string) {
-  let query = supabase
+  let query: any = supabase
     .from("videos")
     .select(`
       *,
@@ -101,7 +101,7 @@ export async function getVideosWithCreator(videoId?: string) {
  * Obtiene reviews con información del autor y relaciones
  */
 export async function getReviewsWithDetails(reviewId?: string) {
-  let query = supabase
+  let query: any = supabase
     .from("reviews")
     .select(`
       *,
