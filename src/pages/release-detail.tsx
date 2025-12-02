@@ -51,11 +51,22 @@ export default function ReleaseDetailPage() {
 
   useEffect(() => {
     async function fetchRelease() {
-      const { data, error } = await supabase
+      // Intentar obtener con join a profiles si existe created_by
+      let query = supabase
         .from("dj_releases")
-        .select("*")
+        .select(`
+          *,
+          creator_profile:profiles!dj_releases_created_by_fkey(
+            id,
+            name,
+            username,
+            avatar_url
+          )
+        `)
         .eq("id", id)
         .single()
+      
+      const { data, error } = await query
 
       if (error) {
         console.error("Error fetching release:", error)

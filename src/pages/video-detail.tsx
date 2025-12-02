@@ -38,7 +38,20 @@ export default function VideoDetailPage() {
 
   useEffect(() => {
     async function fetchVideo() {
-      const { data, error } = await supabase.from("videos").select("*").eq("id", id).single()
+      // Obtener video con información del creador si existe uploader_id
+      const { data, error } = await supabase
+        .from("videos")
+        .select(`
+          *,
+          creator_profile:profiles!videos_uploader_id_fkey(
+            id,
+            name,
+            username,
+            avatar_url
+          )
+        `)
+        .eq("id", id)
+        .single()
 
       if (error) {
         console.error("Error fetching video:", error)
