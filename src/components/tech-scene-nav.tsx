@@ -23,27 +23,25 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
         .limit(10)
   )
 
-  // Obtener clubs desde profiles
-  const { data: clubsData, loading: clubsLoading } = useSupabaseQuery<UserProfile>(
-    TABLES.PROFILES,
+  // Obtener clubs desde tech_scene_entities
+  const { data: clubsData, loading: clubsLoading } = useSupabaseQuery<any>(
+    "tech_scene_entities",
     (query) => 
       query
-        .eq("profile_type", "club")
-        .eq("is_verified", true)
-        .eq("is_active", true)
-        .order("name", { ascending: true })
+        .eq("entity_type", "club")
+        .eq("is_featured", true)
+        .order("display_order", { ascending: true })
         .limit(15)
   )
 
-  // Obtener labels desde profiles
-  const { data: labelsData, loading: labelsLoading } = useSupabaseQuery<UserProfile>(
-    TABLES.PROFILES,
+  // Obtener labels desde tech_scene_entities
+  const { data: labelsData, loading: labelsLoading } = useSupabaseQuery<any>(
+    "tech_scene_entities",
     (query) => 
       query
-        .eq("profile_type", "label")
-        .eq("is_verified", true)
-        .eq("is_active", true)
-        .order("name", { ascending: true })
+        .eq("entity_type", "label")
+        .eq("is_featured", true)
+        .order("display_order", { ascending: true })
         .limit(10)
   )
 
@@ -73,19 +71,19 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
     return clubsData
       .filter((c) => c.name)
       .map((c) => ({
-        name: c.name!,
-        slug: c.username || c.id,
+        name: c.name,
+        slug: c.slug || c.id,
       }))
   }, [clubsData])
 
   const labels = useMemo(() => {
-    // Priorizar labels de profiles
+    // Priorizar labels de tech_scene_entities
     if (labelsData && labelsData.length > 0) {
       return labelsData
         .filter((l) => l.name)
         .map((l) => ({
-          name: l.name!,
-          slug: l.username || l.id,
+          name: l.name,
+          slug: l.slug || l.id,
         }))
     }
     

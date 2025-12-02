@@ -24,80 +24,104 @@ BEGIN
 END
 $$;
 
--- 2) Asegurar que existe la columna 'name' en profiles
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'profiles' AND column_name = 'name'
-  ) THEN
-    ALTER TABLE profiles ADD COLUMN name TEXT;
-    RAISE NOTICE 'Columna "name" agregada a la tabla profiles';
-  END IF;
-END
-$$;
+-- 2) Crear tabla separada para datos de navegación (clubs y labels)
+-- Esta tabla no requiere usuarios reales en auth.users
+CREATE TABLE IF NOT EXISTS tech_scene_entities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('club', 'label')),
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  city TEXT,
+  country TEXT DEFAULT 'España',
+  is_featured BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
 
--- 3) Insertar clubs como perfiles (si no existen)
-INSERT INTO profiles (id, email, role, profile_type, name, city, country, is_active, is_verified, verification_status)
+-- Índices para búsquedas rápidas
+CREATE INDEX IF NOT EXISTS idx_tech_scene_entities_type ON tech_scene_entities(entity_type, is_featured);
+CREATE INDEX IF NOT EXISTS idx_tech_scene_entities_slug ON tech_scene_entities(slug);
+
+-- RLS: lectura pública, escritura solo para admins
+ALTER TABLE tech_scene_entities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tech_scene_entities_select" ON tech_scene_entities
+  FOR SELECT
+  USING (true);
+
+CREATE POLICY "tech_scene_entities_modify" ON tech_scene_entities
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.role IN ('admin', 'editor')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.id = auth.uid() 
+      AND profiles.role IN ('admin', 'editor')
+    )
+  );
+
+-- 3) Insertar clubs en tech_scene_entities (si no existen)
+INSERT INTO tech_scene_entities (entity_type, name, slug, city, country, is_featured, display_order)
 SELECT 
-  gen_random_uuid(),
-  LOWER(REPLACE(club.name, ' ', '_')) || '@technoexperience.com',
-  'user',
   'club',
   club.name,
+  LOWER(REPLACE(REPLACE(club.name, ' ', '-'), '''', '')),
   club.city,
   'España',
   true,
-  true,
-  'APPROVED'
+  club.order
 FROM (VALUES
-  ('METRO DANCE CLUB', 'Madrid'),
-  ('Fabrik', 'Madrid'),
-  ('Kapital', 'Madrid'),
-  ('Opium', 'Barcelona'),
-  ('Pacha', 'Barcelona'),
-  ('Space', 'Barcelona'),
-  ('Input', 'Barcelona'),
-  ('Razzmatazz', 'Barcelona'),
-  ('Sala Apolo', 'Barcelona'),
-  ('Moog', 'Barcelona'),
-  ('Luz de Gas', 'Barcelona'),
-  ('Bassiani', 'Barcelona')
-) AS club(name, city)
+  ('METRO DANCE CLUB', 'Madrid', 1),
+  ('Fabrik', 'Madrid', 2),
+  ('Kapital', 'Madrid', 3),
+  ('Opium', 'Barcelona', 4),
+  ('Pacha', 'Barcelona', 5),
+  ('Space', 'Barcelona', 6),
+  ('Input', 'Barcelona', 7),
+  ('Razzmatazz', 'Barcelona', 8),
+  ('Sala Apolo', 'Barcelona', 9),
+  ('Moog', 'Barcelona', 10),
+  ('Luz de Gas', 'Barcelona', 11),
+  ('Bassiani', 'Barcelona', 12)
+) AS club(name, city, "order")
 WHERE NOT EXISTS (
-  SELECT 1 FROM profiles 
-  WHERE profiles.name = club.name 
-  AND profiles.profile_type = 'club'
+  SELECT 1 FROM tech_scene_entities 
+  WHERE tech_scene_entities.name = club.name 
+  AND tech_scene_entities.entity_type = 'club'
 )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (slug) DO NOTHING;
 
--- 4) Insertar labels como perfiles (si no existen)
-INSERT INTO profiles (id, email, role, profile_type, name, city, country, is_active, is_verified, verification_status)
+-- 4) Insertar labels en tech_scene_entities (si no existen)
+INSERT INTO tech_scene_entities (entity_type, name, slug, city, country, is_featured, display_order)
 SELECT 
-  gen_random_uuid(),
-  LOWER(REPLACE(label.name, ' ', '_')) || '@technoexperience.com',
-  'user',
   'label',
   label.name,
+  LOWER(REPLACE(REPLACE(label.name, ' ', '-'), '''', '')),
   label.city,
   'España',
   true,
-  true,
-  'APPROVED'
+  label.order
 FROM (VALUES
-  ('POLE GROUP', 'Madrid'),
-  ('Industrial Copera', 'Madrid'),
-  ('Warm Up Recordings', 'Barcelona'),
-  ('Semantica', 'Barcelona'),
-  ('Informa Records', 'Valencia'),
-  ('Analogue Attic', 'Barcelona')
-) AS label(name, city)
+  ('POLE GROUP', 'Madrid', 1),
+  ('Industrial Copera', 'Madrid', 2),
+  ('Warm Up Recordings', 'Barcelona', 3),
+  ('Semantica', 'Barcelona', 4),
+  ('Informa Records', 'Valencia', 5),
+  ('Analogue Attic', 'Barcelona', 6)
+) AS label(name, city, "order")
 WHERE NOT EXISTS (
-  SELECT 1 FROM profiles 
-  WHERE profiles.name = label.name 
-  AND profiles.profile_type = 'label'
+  SELECT 1 FROM tech_scene_entities 
+  WHERE tech_scene_entities.name = label.name 
+  AND tech_scene_entities.entity_type = 'label'
 )
-ON CONFLICT DO NOTHING;
+ON CONFLICT (slug) DO NOTHING;
 
 -- 5) Insertar festivales como eventos (si no existen)
 INSERT INTO events (id, title, slug, description, event_date, venue, city, country, event_type, featured, status)

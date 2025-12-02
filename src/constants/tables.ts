@@ -15,6 +15,7 @@ export const TABLES = {
     PRODUCT_LIKES: "product_likes",
     ORDERS: "orders",
     ORDER_ITEMS: "order_items",
+    TECH_SCENE_ENTITIES: "tech_scene_entities",
 } as const
 
 export type TableName = (typeof TABLES)[keyof typeof TABLES]
