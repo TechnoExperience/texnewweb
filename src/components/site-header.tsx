@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { LogIn, UserPlus, LogOut, Settings, LayoutDashboard } from "lucide-react"
 import { LanguageSwitcher } from "./language-switcher"
 import { Logo } from "./logo"
+import { TechSceneNav } from "./tech-scene-nav"
 import { useAuth } from "@/hooks/useAuth"
 import { ROUTES } from "@/constants/routes"
 import { useCallback } from "react"
@@ -35,6 +36,9 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-black/95 backdrop-blur-sm border-b border-white/10">
+      {/* Barra de navegación de clubs y festivales */}
+      <TechSceneNav />
+      
       <div className="container mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <Logo size="md" className="flex-shrink-0 w-auto sm:w-full" />
