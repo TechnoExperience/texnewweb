@@ -173,8 +173,8 @@ export default function StorePage() {
                   onHover={() => setHoveredProduct(product.id)}
                   onLeave={() => setHoveredProduct(null)}
                   isLiked={isLiked(product.id)}
-                  onToggleLike={(e) => handleToggleLike(product.id, e)}
-                  onAddToCart={(e) => handleAddToCart(product, e)}
+                  onToggleLike={(e: React.MouseEvent) => handleToggleLike(product.id, e)}
+                  onAddToCart={(e: React.MouseEvent) => handleAddToCart(product, e)}
                 />
               ))}
             </div>
@@ -276,6 +276,9 @@ interface ProductCardProps {
   isHovered: boolean
   onHover: () => void
   onLeave: () => void
+  isLiked?: boolean
+  onToggleLike?: (e: React.MouseEvent) => Promise<void>
+  onAddToCart?: (e: React.MouseEvent) => Promise<void>
 }
 
 function ProductCard({ product, index, isHovered, onHover, onLeave, isLiked = false, onToggleLike, onAddToCart }: ProductCardProps) {

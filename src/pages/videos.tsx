@@ -13,7 +13,7 @@ import type { Video as VideoType } from "@/types"
 import { AdvancedFilters, type FilterState } from "@/components/advanced-filters"
 
 export default function VideosPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [advancedFilters, setAdvancedFilters] = useState<FilterState>({
     search: "",
     datePreset: "all",

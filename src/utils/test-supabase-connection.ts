@@ -34,7 +34,7 @@ export async function testSupabaseConnection() {
 
   // Test 2: Probar conexión básica
   try {
-    const { data, error } = await supabase.from('news').select('id').limit(1)
+    const { error } = await supabase.from('news').select('id').limit(1)
     if (error) {
       results.connection.error = error.message
       console.error('❌ Connection error:', error)
@@ -52,7 +52,7 @@ export async function testSupabaseConnection() {
   
   for (const table of tables) {
     try {
-      const { data, error, count } = await supabase
+      const { error, count } = await supabase
         .from(table)
         .select('*', { count: 'exact', head: true })
       

@@ -122,6 +122,7 @@ export interface Video {
     view_count: number
     video_type?: "aftermovie" | "live_set" | "music_video" | "dj_mix"
     status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
+    published_date?: string
 }
 
 export interface Review {

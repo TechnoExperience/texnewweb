@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom"
 import { supabase } from "@/lib/supabase"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { 
@@ -13,9 +12,7 @@ import {
   Eye, 
   Calendar,
   Play,
-  Share2,
   ThumbsUp,
-  Download,
   Maximize2,
   TrendingUp
 } from "lucide-react"
@@ -109,22 +106,22 @@ export default function VideoDetailPage() {
     return match && match[2].length === 11 ? match[2] : ""
   }
 
-  const handleShareOld = async () => {
-    const shareUrl = `${window.location.origin}/videos/${id}`
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: video?.title,
-          text: video?.description,
-          url: shareUrl,
-        })
-      } catch (err) {
-        console.log("Error sharing:", err)
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl)
-    }
-  }
+  // const handleShareOld = async () => {
+  //   const shareUrl = `${window.location.origin}/videos/${id}`
+  //   if (navigator.share) {
+  //     try {
+  //       await navigator.share({
+  //         title: video?.title,
+  //         text: video?.description,
+  //         url: shareUrl,
+  //       })
+  //     } catch (err) {
+  //       console.log("Error sharing:", err)
+  //     }
+  //   } else {
+  //     navigator.clipboard.writeText(shareUrl)
+  //   }
+  // }
 
   if (loading) {
     return (

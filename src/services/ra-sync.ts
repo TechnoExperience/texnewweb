@@ -89,10 +89,10 @@ function generateSlug(title: string, id?: string): string {
 /**
  * Fetch events from Resident Advisor GraphQL API for a specific area
  */
-async function fetchRAEvents(area: string, country: string): Promise<RAEvent[]> {
+async function fetchRAEvents(area: string, _country: string): Promise<RAEvent[]> {
   try {
     const startDate = new Date().toISOString().split('T')[0]
-    const endDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 60 days ahead
+    // const endDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 60 days ahead
 
     const query = `
       query GET_POPULAR_EVENTS($filters: FilterInputDtoInput, $pageSize: Int!) {
