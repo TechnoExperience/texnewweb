@@ -192,10 +192,10 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden w-full">
       {/* Hero Header - Spotify Style */}
-      <div className="bg-gradient-to-b from-[#00F9FF]/10 via-black to-black pt-20 pb-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-b from-[#00F9FF]/10 via-black to-black pt-20 pb-8 w-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F9FF] to-[#00D9E6] flex items-center justify-center">
               <Calendar className="w-6 h-6 text-black" />
@@ -209,7 +209,7 @@ export default function EventsPage() {
       </div>
 
       {/* Advanced Filters */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full">
         <AdvancedFilters
           type="events"
           onFilterChange={setAdvancedFilters}
@@ -218,20 +218,21 @@ export default function EventsPage() {
       </div>
 
       {/* Filters - Sticky */}
-      <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-wrap">
+      <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10 w-full">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 max-w-7xl">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full md:w-auto">
               <button
                 onClick={() => setIsLocationSidebarOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white text-sm rounded-lg"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white text-xs sm:text-sm rounded-lg whitespace-nowrap"
               >
                 <span>📍</span>
-                <span>{selectedLocation}</span>
+                <span className="hidden sm:inline">{selectedLocation}</span>
+                <span className="sm:hidden">{selectedLocation.substring(0, 8)}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-1 border border-white/10 rounded-lg overflow-hidden">
+              <div className="flex items-center gap-1 border border-white/10 rounded-lg overflow-hidden flex-shrink-0">
                 {[
                   { value: "all" as FilterType, label: "Todos" },
                   { value: "for-you" as FilterType, label: "Para ti" },
@@ -241,7 +242,7 @@ export default function EventsPage() {
                   <button
                     key={filter.value}
                     onClick={() => setActiveFilter(filter.value)}
-                    className={`px-4 py-2 text-sm transition-colors ${
+                    className={`px-2 sm:px-4 py-2 text-xs sm:text-sm transition-colors whitespace-nowrap ${
                       activeFilter === filter.value
                         ? "bg-[#00F9FF] text-black"
                         : "text-white/70 hover:text-white hover:bg-white/5"
@@ -253,7 +254,7 @@ export default function EventsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg p-1">
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg p-1 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -276,7 +277,7 @@ export default function EventsPage() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl w-full">
         {/* Popular Events */}
         {popularEvents.length > 0 && (
           <div className="mb-12">
@@ -470,7 +471,7 @@ export default function EventsPage() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={() => setIsLocationSidebarOpen(false)}
           />
-          <aside className="fixed right-0 top-0 h-full w-80 bg-black border-l border-white/10 z-50 overflow-y-auto">
+          <aside className="fixed right-0 top-0 h-full w-full sm:w-80 bg-black border-l border-white/10 z-50 overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-white">Ubicación</h3>

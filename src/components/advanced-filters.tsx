@@ -153,15 +153,16 @@ export function AdvancedFilters({
     selectedLabels.length
 
   return (
-    <div className={className}>
-      <div className="flex items-center gap-4 mb-4">
+    <div className={`${className} w-full`}>
+      <div className="flex items-center gap-2 sm:gap-4 mb-4 flex-wrap">
         <Button
           variant="outline"
           onClick={() => setIsOpen(!isOpen)}
-          className="border-white/20 text-white hover:bg-white/10"
+          className="border-white/20 text-white hover:bg-white/10 text-xs sm:text-sm"
         >
           <Filter className="w-4 h-4 mr-2" />
-          Filtros Avanzados
+          <span className="hidden sm:inline">Filtros Avanzados</span>
+          <span className="sm:hidden">Filtros</span>
           {activeFiltersCount > 0 && (
             <Badge className="ml-2 bg-[#00F9FF] text-black">
               {activeFiltersCount}
@@ -179,17 +180,18 @@ export function AdvancedFilters({
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-white/60 hover:text-white"
+            className="text-white/60 hover:text-white text-xs sm:text-sm"
           >
             <X className="w-4 h-4 mr-1" />
-            Limpiar filtros
+            <span className="hidden sm:inline">Limpiar filtros</span>
+            <span className="sm:hidden">Limpiar</span>
           </Button>
         )}
       </div>
 
       {isOpen && (
-        <Card className="bg-zinc-900/50 backdrop-blur-sm border-white/10 mb-6">
-          <CardContent className="p-6 space-y-6">
+        <Card className="bg-zinc-900/50 backdrop-blur-sm border-white/10 mb-6 w-full">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Search */}
             <div>
               <label className="block text-white/70 text-sm mb-2 flex items-center gap-2">
