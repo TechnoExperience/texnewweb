@@ -15,6 +15,7 @@ import {
 import type { Category } from "@/types"
 import { TABLES } from "@/constants/tables"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -22,6 +23,10 @@ export default function AdminCategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; categoryId: string | null }>({
+    open: false,
+    categoryId: null,
+  })
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -137,17 +142,23 @@ export default function AdminCategoriesPage() {
   }
 
   async function deleteCategory(id: string) {
-    if (!window.confirm("¿Estás seguro de eliminar esta categoría?")) return
+    setDeleteConfirm({ open: true, categoryId: id })
+  }
 
-    const { error } = await supabase.from(TABLES.CATEGORIES).delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.categoryId) return
+
+    const { error } = await supabase.from(TABLES.CATEGORIES).delete().eq("id", deleteConfirm.categoryId)
 
     if (error) {
-      toast.error("Error al eliminar la categoría")
-      return
+      toast.error("Error al eliminar la categoría", {
+        description: error.message || "No se pudo eliminar la categoría.",
+      })
+    } else {
+      toast.success("Categoría eliminada correctamente")
+      loadCategories()
     }
-
-    toast.success("Categoría eliminada")
-    loadCategories()
+    setDeleteConfirm({ open: false, categoryId: null })
   }
 
   const filteredCategories = categories.filter(cat => {
@@ -343,6 +354,17 @@ export default function AdminCategoriesPage() {
           <p className="text-white/70">No se encontraron categorías</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, categoryId: deleteConfirm.categoryId })}
+        title="Eliminar Categoría"
+        description="¿Estás seguro de que quieres eliminar esta categoría? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   )
 }

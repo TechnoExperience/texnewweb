@@ -49,18 +49,30 @@ export default function AdminNewsPage() {
     setLoading(false)
   }
 
-  async function deleteArticle(id: string) {
-    if (!window.confirm("¿Estás seguro de eliminar esta noticia?")) return
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; articleId: string | null }>({
+    open: false,
+    articleId: null,
+  })
 
-    const { error } = await supabase.from("news").delete().eq("id", id)
+  async function deleteArticle(id: string) {
+    setDeleteConfirm({ open: true, articleId: id })
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.articleId) return
+
+    const { error } = await supabase.from("news").delete().eq("id", deleteConfirm.articleId)
 
     if (error) {
       console.error("Error deleting article:", error)
-      alert("Error al eliminar la noticia")
-      return
+      toast.error("Error al eliminar la noticia", {
+        description: error.message || "No se pudo eliminar la noticia.",
+      })
+    } else {
+      setNews(news.filter(n => n.id !== deleteConfirm.articleId))
+      toast.success("Noticia eliminada correctamente")
     }
-
-    setNews(news.filter(n => n.id !== id))
+    setDeleteConfirm({ open: false, articleId: null })
   }
 
   const filteredNews = news.filter(article => {
@@ -281,6 +293,17 @@ export default function AdminNewsPage() {
             ))}
           </div>
         )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, articleId: deleteConfirm.articleId })}
+        title="Eliminar Noticia"
+        description="¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
       </div>
     </div>
   )

@@ -20,6 +20,7 @@ import {
 import type { Product, Category } from "@/types"
 import { TABLES } from "@/constants/tables"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -28,6 +29,10 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; productId: string | null }>({
+    open: false,
+    productId: null,
+  })
 
   useEffect(() => {
     loadProducts()
@@ -60,18 +65,24 @@ export default function AdminProductsPage() {
   }
 
   async function deleteProduct(id: string) {
-    if (!window.confirm("¿Estás seguro de eliminar este producto?")) return
+    setDeleteConfirm({ open: true, productId: id })
+  }
 
-    const { error } = await supabase.from(TABLES.PRODUCTS).delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.productId) return
+
+    const { error } = await supabase.from(TABLES.PRODUCTS).delete().eq("id", deleteConfirm.productId)
 
     if (error) {
       console.error("Error deleting product:", error)
-      toast.error("Error al eliminar el producto")
-      return
+      toast.error("Error al eliminar el producto", {
+        description: error.message || "No se pudo eliminar el producto.",
+      })
+    } else {
+      setProducts(products.filter(p => p.id !== deleteConfirm.productId))
+      toast.success("Producto eliminado correctamente")
     }
-
-    setProducts(products.filter(p => p.id !== id))
-    toast.success("Producto eliminado")
+    setDeleteConfirm({ open: false, productId: null })
   }
 
   async function toggleActive(id: string, currentStatus: boolean) {
@@ -249,6 +260,17 @@ export default function AdminProductsPage() {
           <p className="text-white/70">No se encontraron productos</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, productId: deleteConfirm.productId })}
+        title="Eliminar Producto"
+        description="¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   )
 }

@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import type { UserProfile } from "@/types"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 const PROFILE_TYPES = [
   { value: "all", label: "Todos", icon: Users },
@@ -35,6 +36,10 @@ export default function AdminProfilesPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; profileId: string | null }>({
+    open: false,
+    profileId: null,
+  })
 
   useEffect(() => {
     loadProfiles()
@@ -55,18 +60,24 @@ export default function AdminProfilesPage() {
   }
 
   async function deleteProfile(id: string) {
-    if (!window.confirm("¿Estás seguro de eliminar este perfil?")) return
+    setDeleteConfirm({ open: true, profileId: id })
+  }
 
-    const { error } = await supabase.from("profiles").delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.profileId) return
+
+    const { error } = await supabase.from("profiles").delete().eq("id", deleteConfirm.profileId)
 
     if (error) {
       console.error("Error deleting profile:", error)
-      toast.error("Error al eliminar el perfil")
-      return
+      toast.error("Error al eliminar el perfil", {
+        description: error.message || "No se pudo eliminar el perfil.",
+      })
+    } else {
+      setProfiles(profiles.filter((p) => p.id !== deleteConfirm.profileId))
+      toast.success("Perfil eliminado correctamente")
     }
-
-    toast.success("Perfil eliminado")
-    setProfiles(profiles.filter((p) => p.id !== id))
+    setDeleteConfirm({ open: false, profileId: null })
   }
 
   const filteredProfiles = profiles.filter((profile) => {
@@ -227,6 +238,17 @@ export default function AdminProfilesPage() {
             <p className="text-white/70">No se encontraron perfiles</p>
           </div>
         )}
+
+        <ConfirmDialog
+          open={deleteConfirm.open}
+          onOpenChange={(open) => setDeleteConfirm({ open, profileId: deleteConfirm.profileId })}
+          title="Eliminar Perfil"
+          description="¿Estás seguro de que quieres eliminar este perfil? Esta acción no se puede deshacer."
+          onConfirm={handleDeleteConfirm}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
       </div>
     </div>
   )

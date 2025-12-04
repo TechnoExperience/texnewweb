@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Search, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import type { Event } from "@/types";
 
@@ -17,6 +19,10 @@ export default function AdminEventsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; eventId: string | null }>({
+    open: false,
+    eventId: null,
+  });
 
   useEffect(() => {
     fetchEvents();
@@ -42,14 +48,23 @@ export default function AdminEventsPage() {
   }
 
   async function deleteEvent(id: string) {
-    if (!confirm(t("cms.confirmDelete"))) return;
-    const { error } = await supabase.from("events").delete().eq("id", id);
+    setDeleteConfirm({ open: true, eventId: id });
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.eventId) return;
+    
+    const { error } = await supabase.from("events").delete().eq("id", deleteConfirm.eventId);
     if (error) {
       console.error("Error deleting event:", error);
-      alert("Error al eliminar el evento");
+      toast.error("Error al eliminar el evento", {
+        description: error.message || "No se pudo eliminar el evento.",
+      });
     } else {
-      setEvents(events.filter((e) => e.id !== id));
+      setEvents(events.filter((e) => e.id !== deleteConfirm.eventId));
+      toast.success("Evento eliminado correctamente");
     }
+    setDeleteConfirm({ open: false, eventId: null });
   }
 
   async function toggleFeatured(event: Event) {
@@ -59,13 +74,16 @@ export default function AdminEventsPage() {
       .eq("id", event.id);
     if (error) {
       console.error("Error toggling featured:", error);
-      alert("Error al actualizar featured");
+      toast.error("Error al actualizar featured", {
+        description: error.message || "No se pudo actualizar el estado.",
+      });
     } else {
       setEvents(
         events.map((e) =>
           e.id === event.id ? { ...e, featured: !e.featured } : e
         )
       );
+      toast.success(`Evento ${!event.featured ? "destacado" : "removido de destacados"}`);
     }
   }
 
@@ -76,13 +94,16 @@ export default function AdminEventsPage() {
       .eq("id", event.id);
     if (error) {
       console.error("Error toggling header featured:", error);
-      alert("Error al actualizar evento a cabecera");
+      toast.error("Error al actualizar evento a cabecera", {
+        description: error.message || "No se pudo actualizar el estado.",
+      });
     } else {
       setEvents(
         events.map((e) =>
           e.id === event.id ? { ...e, header_featured: !e.header_featured } : e
         )
       );
+      toast.success(`Evento ${!event.header_featured ? "añadido a" : "removido de"} cabecera`);
     }
   }
 
@@ -271,6 +292,17 @@ export default function AdminEventsPage() {
           <p className="text-zinc-400">{t("cms.noEventsFound")}</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, eventId: deleteConfirm.eventId })}
+        title="Eliminar Evento"
+        description="¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
       </div>
     </div>
   );

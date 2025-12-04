@@ -12,6 +12,7 @@ import { analyzeSeo } from "@/lib/seo-analyzer"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { useUserProfile } from "@/hooks/useUserProfile"
+import { toast } from "sonner"
 
 const CATEGORIES: ArticleCategory[] = [
   "Entrevistas",
@@ -152,7 +153,9 @@ export default function AdminNewsEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!article.title || !article.slug || !article.excerpt || !article.content || !article.author || !article.category) {
-      alert("Título, slug, extracto, contenido, autor y categoría son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título, slug, extracto, contenido, autor y categoría son obligatorios.",
+      })
       return
     }
 
@@ -204,9 +207,12 @@ export default function AdminNewsEditPage() {
         throw result.error || new Error("Error al guardar la noticia")
       }
       navigate("/admin/news")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving article:", error)
-      alert("Error al guardar la noticia")
+      toast.error("Error al guardar la noticia", {
+        description: error?.message || "No se pudo guardar la noticia. Intenta de nuevo.",
+        duration: 5000,
+      })
     } finally {
       setSaving(false)
     }

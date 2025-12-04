@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase"
 import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { toast } from "sonner"
 import type { Event } from "@/types"
 
 export default function AdminEventsEditPage() {
@@ -33,7 +34,9 @@ export default function AdminEventsEditPage() {
       const { data, error } = await supabase.from("events").select("*").eq("id", id).single()
       if (error) {
         console.error("Error loading event:", error)
-        alert("Error al cargar el evento")
+        toast.error("Error al cargar el evento", {
+          description: error.message || "No se pudo cargar el evento. Redirigiendo...",
+        })
         navigate("/admin/events")
       } else if (data) {
         setEvent(data)
@@ -89,7 +92,9 @@ export default function AdminEventsEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!event.title || !event.slug || !event.event_date || !event.city || !event.country) {
-      alert("Título, slug, fecha, ciudad y país son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título, slug, fecha, ciudad y país son obligatorios.",
+      })
       return
     }
 
@@ -125,9 +130,12 @@ export default function AdminEventsEditPage() {
         throw result.error || new Error("Error al guardar el evento")
       }
       navigate("/admin/events")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving event:", error)
-      alert("Error al guardar el evento")
+      toast.error("Error al guardar el evento", {
+        description: error?.message || "No se pudo guardar el evento. Intenta de nuevo.",
+        duration: 5000,
+      })
     } finally {
       setSaving(false)
     }

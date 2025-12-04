@@ -49,24 +49,35 @@ export default function AdminVideosPage() {
   }
 
   async function deleteVideo(id: string) {
-    if (!window.confirm("¿Seguro que quieres eliminar este vídeo?")) return
+    setDeleteConfirm({ open: true, videoId: id })
+  }
 
-    const { error } = await supabase.from("videos").delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.videoId) return
+
+    const { error } = await supabase.from("videos").delete().eq("id", deleteConfirm.videoId)
     if (error) {
       console.error("Error deleting video:", error)
-      alert("Error al eliminar el vídeo")
-      return
+      toast.error("Error al eliminar el vídeo", {
+        description: error.message || "No se pudo eliminar el vídeo.",
+      })
+    } else {
+      setVideos((prev) => prev.filter((v) => v.id !== deleteConfirm.videoId))
+      toast.success("Vídeo eliminado correctamente")
     }
-    setVideos((prev) => prev.filter((v) => v.id !== id))
+    setDeleteConfirm({ open: false, videoId: null })
   }
 
   async function updateStatus(id: string, status: "PENDING_REVIEW" | "PUBLISHED" | "REJECTED") {
     const { error } = await supabase.from("videos").update({ status }).eq("id", id)
     if (error) {
       console.error("Error updating status:", error)
-      alert("Error al actualizar el estado del vídeo")
+      toast.error("Error al actualizar el estado del vídeo", {
+        description: error.message || "No se pudo actualizar el estado.",
+      })
       return
     }
+    toast.success(`Estado actualizado a ${status}`)
     setVideos((prev) =>
       prev.map((v) => (v.id === id ? { ...v, status } : v)),
     )
@@ -273,6 +284,17 @@ export default function AdminVideosPage() {
             ))}
           </div>
         )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, videoId: deleteConfirm.videoId })}
+        title="Eliminar Vídeo"
+        description="¿Estás seguro de que quieres eliminar este vídeo? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
       </div>
     </div>
   )
