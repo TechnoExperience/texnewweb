@@ -10,6 +10,7 @@ import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmbeddedPlayer } from "@/components/embedded-player"
 import { getEmbedFromUrl } from "@/lib/embeds"
+import { useUserProfile } from "@/hooks/useUserProfile"
 import { toast } from "sonner"
 import type { Release } from "@/types"
 
@@ -20,6 +21,7 @@ export default function AdminReleasesEditPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { userId } = useUserProfile()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -223,6 +225,11 @@ export default function AdminReleasesEditPage() {
       player_provider: release.player_provider || null,
       embed_html: release.embed_html || null,
       player_type: release.player_type || "auto",
+    }
+
+    // Agregar created_by al crear nuevo release
+    if (!isEditMode && userId) {
+      payload.created_by = userId
     }
 
     try {

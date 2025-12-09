@@ -194,6 +194,10 @@ export default function AdminReviewsEditPage() {
       related_dj_id: review.related_dj_id || null,
       related_promoter_id: review.related_promoter_id || null,
       venue_name: review.venue_name || null,
+      // SEO fields
+      seo_title: seo.metaTitle || review.title || null,
+      seo_description: seo.metaDescription || review.excerpt || null,
+      seo_focus_keyword: seo.focusKeyword || null,
     }
 
     try {

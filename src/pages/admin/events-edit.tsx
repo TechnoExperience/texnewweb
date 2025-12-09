@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase"
 import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { useUserProfile } from "@/hooks/useUserProfile"
 import { toast } from "sonner"
 import type { Event } from "@/types"
 
@@ -15,6 +16,7 @@ export default function AdminEventsEditPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { userId } = useUserProfile()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -123,6 +125,11 @@ export default function AdminEventsEditPage() {
     if (event.cover_image_url) payload.cover_image_url = event.cover_image_url
     if (event.ticket_link_url) payload.ticket_link_url = event.ticket_link_url
     if (event.price_info) payload.price_info = event.price_info
+
+    // Agregar created_by al crear nuevo evento
+    if (!isEditMode && userId) {
+      payload.created_by = userId
+    }
 
     try {
       const result = await saveToCMS("events", payload, isEditMode ? id : undefined)

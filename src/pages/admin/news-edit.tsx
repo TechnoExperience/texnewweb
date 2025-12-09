@@ -175,7 +175,6 @@ export default function AdminNewsEditPage() {
       meta_title: seo.metaTitle || article.title,
       meta_description: seo.metaDescription || article.excerpt,
       seo_focus_keyword: seo.focusKeyword || null,
-      seo_slug: article.slug,
     }
 
     // Establecer created_by y status según el rol
