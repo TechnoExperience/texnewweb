@@ -206,7 +206,7 @@ export function HeroHeader({ onMenuToggle }: HeroHeaderProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/40" style={{ zIndex: 10 }} />
 
       {/* Top Navigation */}
-      <div className="absolute top-0 left-0 right-0 p-6" style={{ zIndex: 30 }}>
+      <div className="absolute top-0 left-0 right-0" style={{ zIndex: 30, paddingLeft: '10%', paddingRight: '10%', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
         <div className="flex items-center justify-between">
           <Logo size="md" />
           <div className="flex items-center gap-4">

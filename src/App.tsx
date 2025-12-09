@@ -56,6 +56,7 @@ const AdminProfilesPage = lazy(() => import("./pages/admin/profiles"))
 const AdminProfilesEditPage = lazy(() => import("./pages/admin/profiles-edit"))
 const AdminProductsPage = lazy(() => import("./pages/admin/products"))
 const AdminProductsEditPage = lazy(() => import("./pages/admin/products-edit"))
+const AdminDropshippingPage = lazy(() => import("./pages/admin/dropshipping"))
 const AdminCategoriesPage = lazy(() => import("./pages/admin/categories"))
 const AdminOrdersPage = lazy(() => import("./pages/admin/orders"))
 const AdminUsersPage = lazy(() => import("./pages/admin/users"))
@@ -92,7 +93,7 @@ function AppComponent() {
           currentSection={currentSection}
         />
       )}
-      <main className="flex-1 overflow-x-hidden w-full" style={{ minHeight: 0 }}>
+      <main className="flex-1 overflow-x-hidden w-full" style={{ minHeight: 0, width: '100%' }}>
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/coming-soon" element={<ComingSoonPage />} />
@@ -350,6 +351,14 @@ function AppComponent() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminProductsEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dropshipping"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminDropshippingPage />
               </ProtectedRoute>
             }
           />

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
+import { TABLES } from "@/constants/tables"
 import { Link } from "react-router-dom"
 import {
   FileText,
@@ -32,6 +33,8 @@ interface Stats {
   totalVideos: number
   recentNews: number
   upcomingEvents: number
+  totalViews: number
+  totalUsers: number
 }
 
 export default function AdminDashboard() {
@@ -44,53 +47,102 @@ export default function AdminDashboard() {
     totalVideos: 0,
     recentNews: 0,
     upcomingEvents: 0,
+    totalViews: 0,
+    totalUsers: 0,
   })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
 
-      if (!user) return
+        if (!user) {
+          setLoading(false)
+          return
+        }
 
-      // Fetch all stats in parallel
-      // Si es editor, solo contar su propio contenido
-      let newsQuery = supabase.from("news").select("*", { count: "exact", head: true })
-      let eventsQuery = supabase.from("events").select("*", { count: "exact", head: true })
-      let releasesQuery = supabase.from("dj_releases").select("*", { count: "exact", head: true })
-      let videosQuery = supabase.from("videos").select("*", { count: "exact", head: true })
-      let recentNewsQuery = supabase.from("news").select("*", { count: "exact", head: true }).gte("published_date", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-      let upcomingEventsQuery = supabase.from("events").select("*", { count: "exact", head: true }).gte("event_date", new Date().toISOString())
+        // Fetch all stats in parallel
+        // Construir queries base
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        const today = new Date().toISOString()
 
-      if (isEditor && userId) {
-        newsQuery = newsQuery.eq("created_by", userId)
-        eventsQuery = eventsQuery.eq("created_by", userId)
-        releasesQuery = releasesQuery.eq("created_by", userId)
-        videosQuery = videosQuery.eq("created_by", userId)
-        recentNewsQuery = recentNewsQuery.eq("created_by", userId)
-        upcomingEventsQuery = upcomingEventsQuery.eq("created_by", userId)
+        // Queries base sin filtros de editor (los admins ven todo)
+        let newsQuery = supabase.from(TABLES.NEWS).select("*", { count: "exact", head: true })
+        let eventsQuery = supabase.from(TABLES.EVENTS).select("*", { count: "exact", head: true })
+        let releasesQuery = supabase.from(TABLES.DJ_RELEASES).select("*", { count: "exact", head: true })
+        let videosQuery = supabase.from(TABLES.VIDEOS).select("*", { count: "exact", head: true })
+        let recentNewsQuery = supabase.from(TABLES.NEWS).select("*", { count: "exact", head: true }).gte("published_date", sevenDaysAgo)
+        let upcomingEventsQuery = supabase.from(TABLES.EVENTS).select("*", { count: "exact", head: true }).gte("event_date", today)
+
+        // Si es editor, filtrar por created_by (si existe la columna)
+        // Nota: Algunas tablas pueden no tener created_by, así que verificamos primero
+        if (isEditor && userId && !isAdmin) {
+          // Intentar filtrar por created_by si existe, sino mostrar todo
+          newsQuery = newsQuery.eq("created_by", userId)
+          eventsQuery = eventsQuery.eq("created_by", userId)
+          releasesQuery = releasesQuery.eq("created_by", userId)
+          videosQuery = videosQuery.eq("created_by", userId)
+          recentNewsQuery = recentNewsQuery.eq("created_by", userId)
+          upcomingEventsQuery = upcomingEventsQuery.eq("created_by", userId)
+        }
+
+        // Obtener vistas totales (suma de view_count de videos y eventos si tienen)
+        const viewsQuery = supabase
+          .from(TABLES.VIDEOS)
+          .select("view_count")
+        
+        // Obtener total de usuarios
+        const usersQuery = supabase
+          .from(TABLES.PROFILES)
+          .select("*", { count: "exact", head: true })
+
+        const [
+          newsResult, 
+          eventsResult, 
+          releasesResult, 
+          videosResult, 
+          recentNewsResult, 
+          upcomingEventsResult,
+          viewsResult,
+          usersResult
+        ] = await Promise.all([
+          newsQuery,
+          eventsQuery,
+          releasesQuery,
+          videosQuery,
+          recentNewsQuery,
+          upcomingEventsQuery,
+          viewsQuery,
+          usersQuery,
+        ])
+
+        // Calcular vistas totales
+        let totalViews = 0
+        if (viewsResult.data) {
+          totalViews = viewsResult.data.reduce((sum: number, video: any) => {
+            return sum + (video.view_count || 0)
+          }, 0)
+        }
+
+        // Manejar errores y extraer counts
+        setStats({
+          totalNews: newsResult.count ?? 0,
+          totalEvents: eventsResult.count ?? 0,
+          totalReleases: releasesResult.count ?? 0,
+          totalVideos: videosResult.count ?? 0,
+          recentNews: recentNewsResult.count ?? 0,
+          upcomingEvents: upcomingEventsResult.count ?? 0,
+          totalViews: totalViews,
+          totalUsers: usersResult.count ?? 0,
+        })
+
+        setLoading(false)
+      } catch (error) {
+        console.error("Error loading dashboard stats:", error)
+        setLoading(false)
       }
-
-      const [newsCount, eventsCount, releasesCount, videosCount, recentNewsCount, upcomingEventsCount] = await Promise.all([
-        newsQuery,
-        eventsQuery,
-        releasesQuery,
-        videosQuery,
-        recentNewsQuery,
-        upcomingEventsQuery,
-      ])
-
-      setStats({
-        totalNews: newsCount.count || 0,
-        totalEvents: eventsCount.count || 0,
-        totalReleases: releasesCount.count || 0,
-        totalVideos: videosCount.count || 0,
-        recentNews: recentNewsCount.count || 0,
-        upcomingEvents: upcomingEventsCount.count || 0,
-      })
-
-      setLoading(false)
     }
 
     loadData()
@@ -239,7 +291,7 @@ export default function AdminDashboard() {
                   <Eye className="w-5 h-5 text-[#00F9FF]" />
                   <span className="text-sm font-medium text-white">Vistas totales</span>
                 </div>
-                <span className="text-xl font-bold text-white">-</span>
+                <span className="text-xl font-bold text-white">{stats.totalViews.toLocaleString()}</span>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-none border border-zinc-700">
@@ -247,7 +299,9 @@ export default function AdminDashboard() {
                   <TrendingUp className="w-5 h-5 text-[#00F9FF]" />
                   <span className="text-sm font-medium text-white">Tendencia</span>
                 </div>
-                <Badge className="bg-[#00F9FF] text-black">↑ </Badge>
+                <Badge className="bg-[#00F9FF] text-black">
+                  {stats.recentNews > 0 ? '↑' : stats.recentNews === 0 ? '→' : '↓'}
+                </Badge>
               </div>
 
               <div className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-none border border-zinc-700">
@@ -255,7 +309,7 @@ export default function AdminDashboard() {
                   <Users className="w-5 h-5 text-[#00F9FF]" />
                   <span className="text-sm font-medium text-white">Usuarios</span>
                 </div>
-                <span className="text-xl font-bold text-white">-</span>
+                <span className="text-xl font-bold text-white">{stats.totalUsers}</span>
               </div>
 
               <Button className="w-full mt-4 bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 hover:border-[#00F9FF]" variant="outline">
@@ -266,29 +320,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Management Links - Responsive */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-          {[
-            { title: "Gestionar Noticias", icon: Edit, link: "/admin/news", items: stats.totalNews },
-            { title: "Gestionar Eventos", icon: Calendar, link: "/admin/events", items: stats.totalEvents },
-            { title: "Gestionar Releases", icon: Music, link: "/admin/releases", items: stats.totalReleases },
-            { title: "Gestionar Videos", icon: Video, link: "/admin/videos", items: stats.totalVideos },
-          ].map((item) => (
-            <Link key={item.title} to={item.link}>
-              <Card className="hover:shadow-lg hover:shadow-[#00F9FF]/20 transition-all hover:-translate-y-0.5 group border border-zinc-800 hover:border-[#00F9FF] bg-zinc-900">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-zinc-400 mb-1">{item.title}</p>
-                      <p className="text-2xl font-bold text-white">{item.items}</p>
-                    </div>
-                    <item.icon className="w-8 h-8 text-[#00F9FF] group-hover:scale-110 transition-transform" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
 
         {/* E-commerce Management Links */}
         <div className="mt-8">
@@ -296,6 +327,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { title: "Productos", icon: Package, link: "/admin/products", color: "text-[#00F9FF]" },
+              { title: "Dropshipping", icon: Package, link: "/admin/dropshipping", color: "text-[#00F9FF]" },
               { title: "Categorías", icon: FolderTree, link: "/admin/categories", color: "text-[#00F9FF]" },
               { title: "Pedidos", icon: ShoppingCart, link: "/admin/orders", color: "text-[#00F9FF]" },
               { title: "Usuarios", icon: Users, link: "/admin/users", color: "text-[#00F9FF]" },

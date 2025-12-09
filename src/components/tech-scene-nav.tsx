@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { useState, useEffect, useMemo } from "react"
 import { useSupabaseQuery } from "@/hooks/useSupabaseQuery"
 import { TABLES } from "@/constants/tables"
-import type { Event, UserProfile, Release } from "@/types"
+import type { Event, UserProfile } from "@/types"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface TechSceneNavProps {
@@ -34,26 +34,6 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
         .limit(15)
   )
 
-  // Obtener labels desde tech_scene_entities
-  const { data: labelsData, loading: labelsLoading } = useSupabaseQuery<any>(
-    "tech_scene_entities",
-    (query) => 
-      query
-        .eq("entity_type", "label")
-        .eq("is_featured", true)
-        .order("display_order", { ascending: true })
-        .limit(10)
-  )
-
-  // También obtener labels únicos desde releases como fallback
-  const { data: releasesData } = useSupabaseQuery<Release>(
-    TABLES.RELEASES,
-    (query) => 
-      query
-        .select("label")
-        .order("release_date", { ascending: false })
-        .limit(50)
-  )
 
   // Procesar datos
   const festivals = useMemo(() => {
@@ -76,32 +56,7 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
       }))
   }, [clubsData])
 
-  const labels = useMemo(() => {
-    // Priorizar labels de tech_scene_entities
-    if (labelsData && labelsData.length > 0) {
-      return labelsData
-        .filter((l) => l.name)
-        .map((l) => ({
-          name: l.name,
-          slug: l.slug || l.id,
-        }))
-    }
-    
-    // Fallback: labels únicos de releases
-    if (releasesData && releasesData.length > 0) {
-      const uniqueLabels = Array.from(
-        new Set(releasesData.map((r) => r.label).filter(Boolean))
-      )
-      return uniqueLabels.slice(0, 10).map((label) => ({
-        name: label,
-        slug: label.toLowerCase().replace(/\s+/g, "-"),
-      }))
-    }
-    
-    return []
-  }, [labelsData, releasesData])
-
-  const loading = festivalsLoading || clubsLoading || labelsLoading
+  const loading = festivalsLoading || clubsLoading
 
   useEffect(() => {
     const handleScroll = () => {
@@ -112,7 +67,7 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
   }, [])
 
   // Si está cargando, mostrar skeleton o nada
-  if (loading && festivals.length === 0 && clubs.length === 0 && labels.length === 0) {
+  if (loading && festivals.length === 0 && clubs.length === 0) {
     return (
       <nav className={`w-full bg-black/80 backdrop-blur-md border-b border-white/10 ${className}`}>
         <div className="container mx-auto px-2 sm:px-4 md:px-6 py-3">
@@ -176,27 +131,6 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
               <div className="h-4 w-px bg-white/20" />
             </>
           )}
-
-          {/* Labels */}
-          {labels.length > 0 && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-[#00F9FF] font-heading uppercase text-xs tracking-wider whitespace-nowrap" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-                LABELS
-              </span>
-              <div className="h-4 w-px bg-white/20" />
-              <div className="flex items-center gap-4">
-                {labels.map((label) => (
-                  <Link
-                    key={label.slug}
-                    to={`/releases?search=${encodeURIComponent(label.name)}`}
-                    className="text-white/70 hover:text-[#00F9FF] transition-colors text-xs font-space whitespace-nowrap"
-                  >
-                    {label.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Mobile: Scroll horizontal compacto */}
@@ -246,26 +180,6 @@ export function TechSceneNav({ className = "" }: TechSceneNavProps) {
                 </div>
                 <div className="h-3 w-px bg-white/20 flex-shrink-0" />
               </>
-            )}
-
-            {/* Labels */}
-            {labels.length > 0 && (
-              <div className="flex items-center gap-2 flex-shrink-0 snap-center">
-                <span className="text-[#00F9FF] font-heading uppercase text-[10px] tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-                  LABELS
-                </span>
-                <div className="flex items-center gap-2">
-                  {labels.slice(0, 3).map((label) => (
-                    <Link
-                      key={label.slug}
-                      to={`/releases?search=${encodeURIComponent(label.name)}`}
-                      className="text-white/70 hover:text-[#00F9FF] transition-colors text-[10px] font-space whitespace-nowrap px-1"
-                    >
-                      {label.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
             )}
           </div>
         </div>

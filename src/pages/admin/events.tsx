@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/constants/tables";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Search, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Calendar, Search, Plus, Edit, Trash2, Eye, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ export default function AdminEventsPage() {
     open: false,
     eventId: null,
   });
+  const [syncingRA, setSyncingRA] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -30,7 +32,7 @@ export default function AdminEventsPage() {
 
   async function fetchEvents() {
     const { data, error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .select("*")
       .order("event_date", { ascending: false });
     if (error) {
@@ -54,7 +56,7 @@ export default function AdminEventsPage() {
   async function handleDeleteConfirm() {
     if (!deleteConfirm.eventId) return;
     
-    const { error } = await supabase.from("events").delete().eq("id", deleteConfirm.eventId);
+    const { error } = await supabase.from(TABLES.EVENTS).delete().eq("id", deleteConfirm.eventId);
     if (error) {
       console.error("Error deleting event:", error);
       toast.error("Error al eliminar el evento", {
@@ -69,7 +71,7 @@ export default function AdminEventsPage() {
 
   async function toggleFeatured(event: Event) {
     const { error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .update({ featured: !event.featured })
       .eq("id", event.id);
     if (error) {
@@ -89,7 +91,7 @@ export default function AdminEventsPage() {
 
   async function toggleHeaderFeatured(event: Event) {
     const { error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .update({ header_featured: !event.header_featured })
       .eq("id", event.id);
     if (error) {
@@ -104,6 +106,47 @@ export default function AdminEventsPage() {
         )
       );
       toast.success(`Evento ${!event.header_featured ? "añadido a" : "removido de"} cabecera`);
+    }
+  }
+
+  async function syncWithResidentAdvisor() {
+    setSyncingRA(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Debes estar autenticado para sincronizar");
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-ra-events-stealth`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(`Sincronización completada: ${result.totalCreated} creados, ${result.totalUpdated} actualizados`);
+        await fetchEvents(); // Refrescar la lista
+      } else {
+        toast.error("Error en la sincronización", {
+          description: result.errors?.join(', ') || "Error desconocido",
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing with RA:", error);
+      toast.error("Error al sincronizar con Resident Advisor", {
+        description: error instanceof Error ? error.message : "Error desconocido",
+      });
+    } finally {
+      setSyncingRA(false);
     }
   }
 
@@ -127,17 +170,27 @@ export default function AdminEventsPage() {
   return (
     <div className="min-h-screen bg-black">
       <div className="w-full px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-white" />
           <h1 className="text-3xl font-bold text-white">{t("cms.manageEvents")}</h1>
         </div>
-        <Button asChild className="bg-[#00F9FF] text-black hover:bg-[#00D9E6]">
-          <Link to="/admin/events/new">
-            <Plus className="h-4 w-4 mr-2" />
-            {t("cms.createEvent")}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={syncWithResidentAdvisor}
+            disabled={syncingRA}
+            className="bg-[#00D9E6] text-black hover:bg-[#00F9FF] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncingRA ? 'animate-spin' : ''}`} />
+            {syncingRA ? 'Sincronizando...' : 'Sincronizar con RA'}
+          </Button>
+          <Button asChild className="bg-[#00F9FF] text-black hover:bg-[#00D9E6]">
+            <Link to="/admin/events/new">
+              <Plus className="h-4 w-4 mr-2" />
+              {t("cms.createEvent")}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="bg-zinc-900 border-zinc-800 mb-6">

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useCart } from "@/contexts/cart-context"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
+import { logger } from "@/lib/logger"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -207,6 +208,46 @@ export default function CheckoutPage() {
 
       setOrderId(order.id)
 
+      // Check if any products use dropshipping
+      const dropshippingProducts = items.filter(item => {
+        const product = products?.find(p => p.id === item.product_id)
+        return product?.dropshipping_enabled && product?.dropshipping_url
+      })
+
+      // If there are dropshipping products, process them first
+      if (dropshippingProducts.length > 0) {
+        for (const item of dropshippingProducts) {
+          const product = products?.find(p => p.id === item.product_id)
+          if (product?.dropshipping_enabled && product?.dropshipping_url) {
+            try {
+              const { data: dropshippingData, error: dropshippingError } = await supabase.functions.invoke("process-dropshipping-order", {
+                body: {
+                  order_id: order.id,
+                  product_id: product.id,
+                  quantity: item.quantity,
+                  customer_data: {
+                    shipping_address: shippingAddress,
+                    email: user.email,
+                  }
+                },
+              })
+
+              if (dropshippingError) {
+                logger.error("Error procesando dropshipping", dropshippingError as Error)
+                // Continuar con el proceso aunque falle el dropshipping
+              } else if (dropshippingData?.redirect_url) {
+                // Abrir enlace del proveedor en nueva pestaña
+                window.open(dropshippingData.redirect_url, '_blank')
+                toast.info(`Redirigiendo a ${dropshippingData.supplier_name || 'proveedor'} para completar el pedido`)
+              }
+            } catch (error) {
+              logger.error("Error en dropshipping", error as Error)
+              // Continuar con el proceso
+            }
+          }
+        }
+      }
+
       // Call Edge Function to process payment
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke("process-payment", {
         body: {
@@ -254,7 +295,7 @@ export default function CheckoutPage() {
         throw new Error("No se recibieron los datos necesarios para el pago")
       }
     } catch (error: any) {
-      console.error("Error processing payment:", error)
+      logger.error("Error processing payment", error as Error)
       toast.error(error.message || "Error al procesar el pago")
       setLoading(false)
     }

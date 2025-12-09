@@ -125,7 +125,7 @@ export default function ReleasesPage() {
   const regularReleases = releasesToShow.filter((r) => !r.featured || selectedStyle !== "all")
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-black text-white overflow-hidden w-full" style={{ width: '100%' }}>
       {/* Hero Header - Modern & Animated */}
       <div className="relative bg-gradient-to-b from-[#00F9FF]/20 via-black to-black pt-24 pb-12 overflow-hidden">
         {/* Animated Background Elements */}
@@ -135,7 +135,7 @@ export default function ReleasesPage() {
           <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-[#00F9FF]/5 rounded-full blur-3xl animate-pulse delay-2000" />
         </div>
         
-        <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full relative z-10" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           {/* Advanced Filters */}
           <div className="mb-6">
             <AdvancedFilters
@@ -188,7 +188,7 @@ export default function ReleasesPage() {
         transition={{ duration: 0.4 }}
         className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10"
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full py-4" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-2 min-w-max">
@@ -258,7 +258,7 @@ export default function ReleasesPage() {
       </motion.div>
 
       {/* Content */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full py-8" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         {/* Featured Section - Enhanced with Animations */}
         {selectedStyle === "all" && featuredReleases.length > 0 && (
           <motion.div

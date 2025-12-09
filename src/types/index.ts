@@ -247,6 +247,13 @@ export interface Product {
     tags: string[]
     metadata: Record<string, any>
     view_count: number
+    // Dropshipping fields
+    dropshipping_enabled?: boolean
+    dropshipping_url?: string
+    dropshipping_supplier_name?: string
+    dropshipping_supplier_email?: string
+    dropshipping_markup_percentage?: number
+    dropshipping_base_price?: number
     created_at: string
     updated_at: string
     // Relations (optional, loaded separately)

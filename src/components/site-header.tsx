@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { LogIn, UserPlus, LogOut, Settings, LayoutDashboard } from "lucide-react"
 import { LanguageSwitcher } from "./language-switcher"
 import { Logo } from "./logo"
-import { TechSceneNav } from "./tech-scene-nav"
 import { useAuth } from "@/hooks/useAuth"
 import { ROUTES } from "@/constants/routes"
 import { useCallback } from "react"
@@ -36,24 +35,20 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-black/95 backdrop-blur-sm border-b border-white/10">
-      {/* Barra de navegación de clubs y festivales */}
-      <TechSceneNav />
-      
-      <div className="container mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between gap-2 sm:gap-4">
-          <Logo size="md" className="flex-shrink-0 w-auto sm:w-full" />
-          
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+      <div className="w-full" style={{ paddingLeft: '10%', paddingRight: '10%', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+        <div className="flex items-center justify-between">
+          <Logo size="md" />
+          <div className="flex items-center gap-4">
             {/* CMS Button - Always visible when in admin routes */}
             {isAdminRoute && (
               <Button
                 asChild
                 size="sm"
-                className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black font-bold flex items-center gap-1 sm:gap-2 flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
+                className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black font-bold flex items-center gap-2"
               >
                 <Link to={ROUTES.ADMIN.DASHBOARD}>
-                  <LayoutDashboard className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline sm:inline font-heading uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                     CMS
                   </span>
                 </Link>
@@ -66,7 +61,7 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
                 asChild
                 variant="outline"
                 size="sm"
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-[#00F9FF] flex items-center gap-2 flex-shrink-0"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-[#00F9FF] flex items-center gap-2"
               >
                 <Link to={ROUTES.ADMIN.DASHBOARD}>
                   <Settings className="w-4 h-4" />
@@ -80,16 +75,16 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
             {/* Language Switcher */}
             <LanguageSwitcher />
             
-            {/* Auth Buttons - Responsive with consistent colors */}
+            {/* Auth Buttons */}
             {user ? (
               <Button
                 onClick={signOut}
                 variant="outline"
                 size="sm"
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 flex items-center gap-2 flex-shrink-0"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-[#00F9FF] hidden sm:flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                <span className="font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                   Cerrar Sesión
                 </span>
               </Button>
@@ -99,11 +94,11 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
                   asChild
                   variant="outline"
                   size="sm"
-                  className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30 flex items-center gap-2 flex-shrink-0"
+                  className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-[#00F9FF] hidden sm:flex items-center gap-2"
                 >
                   <Link to={ROUTES.AUTH.LOGIN}>
                     <LogIn className="w-4 h-4" />
-                    <span className="hidden sm:inline font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                    <span className="font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                       Iniciar Sesión
                     </span>
                   </Link>
@@ -111,22 +106,21 @@ export function SiteHeader({ onMenuToggle }: SiteHeaderProps) {
                 <Button
                   asChild
                   size="sm"
-                  className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black font-bold flex items-center gap-1 sm:gap-2 flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-1.5 sm:py-2"
+                  className="bg-[#00F9FF] hover:bg-[#00D9E6] text-white hidden sm:flex items-center gap-2"
                 >
                   <Link to={ROUTES.AUTH.SIGNUP}>
-                    <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline sm:inline font-heading uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                    <UserPlus className="w-4 h-4" />
+                    <span className="font-heading uppercase tracking-wider text-sm" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
                       Crear Cuenta
                     </span>
                   </Link>
                 </Button>
               </>
             )}
-            
             {/* Menu button */}
             <button
               onClick={onMenuToggle}
-              className="text-white hover:text-[#00F9FF] transition-colors flex-shrink-0 p-2 -mr-2 sm:mr-0"
+              className="text-white hover:text-[#00F9FF] transition-colors"
               aria-label="Toggle menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

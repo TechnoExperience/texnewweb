@@ -26,6 +26,7 @@ export const ROUTES = {
         REVIEWS: "/admin/reviews",
         PROFILES: "/admin/profiles",
         PRODUCTS: "/admin/products",
+        DROPSHIPPING: "/admin/dropshipping",
         CATEGORIES: "/admin/categories",
         ORDERS: "/admin/orders",
         USERS: "/admin/users",

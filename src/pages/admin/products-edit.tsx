@@ -48,6 +48,12 @@ export default function AdminProductsEditPage() {
     weight_kg: 0,
     tags: [],
     metadata: {},
+    dropshipping_enabled: false,
+    dropshipping_url: "",
+    dropshipping_supplier_name: "",
+    dropshipping_supplier_email: "",
+    dropshipping_markup_percentage: 0,
+    dropshipping_base_price: 0,
   })
   const [categories, setCategories] = useState<Category[]>([])
   const [tagInput, setTagInput] = useState("")
@@ -405,6 +411,134 @@ export default function AdminProductsEditPage() {
                   <span>Producto destacado</span>
                 </label>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Dropshipping */}
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Dropshipping</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={product.dropshipping_enabled ?? false}
+                  onChange={(e) => {
+                    handleChange("dropshipping_enabled", e.target.checked)
+                    if (!e.target.checked) {
+                      // Limpiar campos de dropshipping si se desactiva
+                      handleChange("dropshipping_url", "")
+                      handleChange("dropshipping_supplier_name", "")
+                      handleChange("dropshipping_supplier_email", "")
+                      handleChange("dropshipping_markup_percentage", 0)
+                      handleChange("dropshipping_base_price", 0)
+                    }
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-white">Habilitar Dropshipping para este producto</span>
+              </div>
+
+              {product.dropshipping_enabled && (
+                <div className="space-y-4 border-t border-zinc-700 pt-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">URL del Producto del Proveedor *</label>
+                    <Input
+                      value={product.dropshipping_url || ""}
+                      onChange={(e) => handleChange("dropshipping_url", e.target.value)}
+                      className="bg-zinc-900 border-zinc-700 text-white"
+                      placeholder="https://proveedor.com/producto/123"
+                      required={product.dropshipping_enabled}
+                    />
+                    <p className="text-xs text-zinc-400 mt-1">Enlace del producto en el sitio del proveedor</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-white">Nombre del Proveedor *</label>
+                      <Input
+                        value={product.dropshipping_supplier_name || ""}
+                        onChange={(e) => handleChange("dropshipping_supplier_name", e.target.value)}
+                        className="bg-zinc-900 border-zinc-700 text-white"
+                        placeholder="Ej: Printful, TeeSpring"
+                        required={product.dropshipping_enabled}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-white">Email del Proveedor</label>
+                      <Input
+                        type="email"
+                        value={product.dropshipping_supplier_email || ""}
+                        onChange={(e) => handleChange("dropshipping_supplier_email", e.target.value)}
+                        className="bg-zinc-900 border-zinc-700 text-white"
+                        placeholder="contacto@proveedor.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-white">Precio Base del Proveedor (€)</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={product.dropshipping_base_price || 0}
+                        onChange={(e) => {
+                          const basePrice = parseFloat(e.target.value) || 0
+                          handleChange("dropshipping_base_price", basePrice)
+                          // Calcular precio automáticamente si hay markup
+                          if (product.dropshipping_markup_percentage) {
+                            const markup = product.dropshipping_markup_percentage / 100
+                            const finalPrice = basePrice * (1 + markup)
+                            handleChange("price", finalPrice)
+                          }
+                        }}
+                        className="bg-zinc-900 border-zinc-700 text-white"
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-zinc-400 mt-1">Precio que cobra el proveedor</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-white">Markup (%)</label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={product.dropshipping_markup_percentage || 0}
+                        onChange={(e) => {
+                          const markup = parseFloat(e.target.value) || 0
+                          handleChange("dropshipping_markup_percentage", markup)
+                          // Calcular precio automáticamente si hay precio base
+                          if (product.dropshipping_base_price) {
+                            const finalPrice = product.dropshipping_base_price * (1 + markup / 100)
+                            handleChange("price", finalPrice)
+                          }
+                        }}
+                        className="bg-zinc-900 border-zinc-700 text-white"
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-zinc-400 mt-1">Porcentaje de ganancia sobre el precio base</p>
+                    </div>
+                  </div>
+
+                  {product.dropshipping_base_price && product.dropshipping_markup_percentage && (
+                    <div className="bg-[#00F9FF]/10 border border-[#00F9FF]/30 p-4 rounded">
+                      <p className="text-sm text-white">
+                        <span className="text-[#00F9FF] font-semibold">Precio calculado:</span>{" "}
+                        €{((product.dropshipping_base_price || 0) * (1 + (product.dropshipping_markup_percentage || 0) / 100)).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Base: €{(product.dropshipping_base_price || 0).toFixed(2)} + {product.dropshipping_markup_percentage}% = €
+                        {((product.dropshipping_base_price || 0) * (1 + (product.dropshipping_markup_percentage || 0) / 100)).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 

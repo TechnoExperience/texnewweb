@@ -123,9 +123,9 @@ export default function VideosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black relative">
+    <div className="min-h-screen bg-black relative w-full" style={{ width: '100%' }}>
       <VideosBackground />
-      <div className="relative z-10 w-full px-4 py-8">
+      <div className="relative z-10 w-full py-8" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         <h1 className="text-4xl font-bold text-white mb-8">{t("videos.title")}</h1>
 
         {/* Advanced Filters */}

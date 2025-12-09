@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
+import { TABLES } from "@/constants/tables"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import {
@@ -33,11 +34,11 @@ export default function AdminNewsPage() {
 
   async function loadNews() {
     let query = supabase
-      .from("news")
+      .from(TABLES.NEWS)
       .select("*")
 
-    // Si es editor, solo cargar su propio contenido
-    if (isEditor && userId) {
+    // Si es editor, solo cargar su propio contenido (si existe created_by)
+    if (isEditor && userId && !isAdmin) {
       query = query.eq("created_by", userId)
     }
 
@@ -61,7 +62,7 @@ export default function AdminNewsPage() {
   async function handleDeleteConfirm() {
     if (!deleteConfirm.articleId) return
 
-    const { error } = await supabase.from("news").delete().eq("id", deleteConfirm.articleId)
+    const { error } = await supabase.from(TABLES.NEWS).delete().eq("id", deleteConfirm.articleId)
 
     if (error) {
       console.error("Error deleting article:", error)

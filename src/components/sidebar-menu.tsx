@@ -42,9 +42,9 @@ export function SidebarMenu({ isOpen, onClose, onSectionChange }: SidebarMenuPro
         />
       )}
 
-      {/* Sidebar - Opens from left with 4 cards full height */}
+      {/* Sidebar - Opens from left with responsive width */}
       <aside
-        className={`fixed left-0 top-0 h-full w-80 bg-black/95 backdrop-blur-sm border-r border-white/10 z-50 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-full w-full sm:w-80 bg-black/95 backdrop-blur-sm border-r border-white/10 z-50 transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -62,20 +62,20 @@ export function SidebarMenu({ isOpen, onClose, onSectionChange }: SidebarMenuPro
           </div>
 
           {/* Menu cards - Full height distribution */}
-          <div className="flex-1 flex flex-col gap-4 px-4 pb-8">
+          <div className="flex-1 flex flex-col gap-3 sm:gap-4 px-3 sm:px-4 pb-6 sm:pb-8 overflow-y-auto">
             {menuSections.map((section) => (
               <Link
                 key={section.href}
                 to={section.href}
                 onClick={() => handleSectionClick(section.section)}
-                className={`flex-1 rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-center p-4 transition-all duration-300 hover:bg-white/10 hover:border-[#00D9E6]/50 ${
+                className={`flex-1 min-h-[80px] sm:min-h-[100px] rounded-none border border-white/10 bg-white/5 flex items-center justify-center text-center p-3 sm:p-4 transition-all duration-300 hover:bg-white/10 hover:border-[#00D9E6]/50 ${
                   location.pathname === section.href
                     ? "bg-[#00D9E6]/20 border-[#00D9E6]/50"
                     : ""
                 }`}
               >
                 <span
-                  className="text-lg font-heading text-white uppercase tracking-wider"
+                  className="text-base sm:text-lg font-heading text-white uppercase tracking-wider"
                   style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
                 >
                   {section.label}

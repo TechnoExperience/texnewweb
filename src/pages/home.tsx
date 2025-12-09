@@ -124,8 +124,8 @@ export default function HomePage() {
 
             {/* Releases Carousel - Single Row - Equal Cards */}
             {latestReleases && latestReleases.length > 0 ? (
-              <div className="relative">
-                <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 -mx-4 px-4 gap-4 lg:gap-6">
+              <div className="relative w-full overflow-visible">
+                <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 gap-4 lg:gap-6" style={{ width: 'calc(100% + 20%)', marginLeft: '-10%', paddingLeft: '10%', paddingRight: '10%' }}>
                   {latestReleases.map((release, index) => (
                     <div 
                       key={release.id} 

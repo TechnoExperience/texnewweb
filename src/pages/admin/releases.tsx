@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { TABLES } from "@/constants/tables"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,7 +39,7 @@ export default function AdminReleasesPage() {
 
   async function fetchReleases() {
     const { data, error } = await supabase
-      .from("dj_releases")
+      .from(TABLES.DJ_RELEASES)
       .select("id, title, artist, label, release_date, cover_art, genre")
       .order("release_date", { ascending: false })
 
@@ -57,7 +58,7 @@ export default function AdminReleasesPage() {
   async function handleDeleteConfirm() {
     if (!deleteConfirm.releaseId) return
 
-    const { error } = await supabase.from("dj_releases").delete().eq("id", deleteConfirm.releaseId)
+    const { error } = await supabase.from(TABLES.DJ_RELEASES).delete().eq("id", deleteConfirm.releaseId)
 
     if (error) {
       console.error("Error deleting release:", error)

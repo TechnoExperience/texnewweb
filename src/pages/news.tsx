@@ -101,7 +101,7 @@ export default function NewsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-hidden">
+        <div className="min-h-screen bg-black text-white relative overflow-hidden w-full">
             {/* Background Effects */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00F9FF]/5 rounded-full blur-3xl" />
@@ -110,7 +110,7 @@ export default function NewsPage() {
 
             {/* Hero Header - Modern Design */}
             <div className="relative bg-gradient-to-b from-[#00F9FF]/10 via-black/50 to-black pt-24 pb-12 border-b border-white/5">
-                <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="w-full relative z-10" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
                     {/* Breadcrumbs */}
                     <Breadcrumbs items={[{ label: "Inicio", href: "/" }, { label: "Noticias" }]} />
                     
@@ -154,7 +154,7 @@ export default function NewsPage() {
 
             {/* Filters - Sticky Modern */}
             <div className="sticky top-16 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-lg">
-                <div className="w-full px-4 sm:px-6 lg:px-8 py-5">
+                <div className="w-full py-5" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div className="flex-1 w-full overflow-x-auto scrollbar-hide pb-2">
                             <div className="flex items-center gap-3 min-w-max">
@@ -217,7 +217,7 @@ export default function NewsPage() {
             </div>
 
             {/* Content */}
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+            <div className="w-full py-12 relative z-10" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
                 {/* Featured Article - Enhanced */}
                 {featured && !searchTerm && selectedCategory === "all" && (
                     <div className="mb-16">

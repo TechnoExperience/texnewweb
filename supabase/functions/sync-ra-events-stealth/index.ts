@@ -180,14 +180,14 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Configuración: Solo 2 ciudades principales para evitar timeout (puedes aumentar después)
+    // Configuración: Solo 2 ciudades principales para evitar timeout y baneos
     const TARGET_CITIES = [
       { city: 'Madrid', area: 'madrid' },
       { city: 'Barcelona', area: 'barcelona' },
     ]
 
-    // Rate limiter: máximo 10 peticiones por hora (muy conservador)
-    const rateLimiter = new RateLimiter(10, 60)
+    // Rate limiter: máximo 5 peticiones por hora (muy conservador para evitar baneos)
+    const rateLimiter = new RateLimiter(5, 60)
 
     let totalCreated = 0
     let totalUpdated = 0
@@ -354,7 +354,10 @@ Deno.serve(async (req) => {
         }
         
         console.log(`   ✅ Encontrados ${raEvents.length} eventos`)
+        console.log(`   🔍 Debug - raEvents es array:`, Array.isArray(raEvents))
+        console.log(`   🔍 Debug - raEvents.length:`, raEvents.length)
         totalFound += raEvents.length
+        console.log(`   🔍 Debug - totalFound después de ${city}:`, totalFound)
         
         let cityCreated = 0
         let citySkipped = 0
@@ -454,12 +457,15 @@ Deno.serve(async (req) => {
         }
 
         // Guardar estadísticas de la ciudad
-        cityStats.push({
+        const cityStat = {
           city,
           found: raEvents.length,
           created: cityCreated,
           skipped: citySkipped
-        })
+        }
+        console.log(`   🔍 Debug - cityStat para ${city}:`, JSON.stringify(cityStat))
+        cityStats.push(cityStat)
+        console.log(`   🔍 Debug - cityStats después de ${city}:`, JSON.stringify(cityStats))
         
         // Delay más corto entre ciudades (2-4 segundos) para evitar timeout
         if (i < TARGET_CITIES.length - 1) {
@@ -478,6 +484,13 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Debug: Verificar valores antes de crear el resultado
+    console.log('🔍 Debug - totalFound:', totalFound)
+    console.log('🔍 Debug - cityStats:', JSON.stringify(cityStats))
+    console.log('🔍 Debug - totalCreated:', totalCreated)
+    console.log('🔍 Debug - totalSkipped:', totalSkipped)
+    console.log('🔍 Debug - errors.length:', errors.length)
+    
     const result = {
       success: errors.length < TARGET_CITIES.length,
       timestamp: new Date().toISOString(),
@@ -491,7 +504,9 @@ Deno.serve(async (req) => {
       cityStats, // Estadísticas por ciudad
     }
 
-    console.log('✅ Sync completado:', result)
+    console.log('✅ Sync completado:', JSON.stringify(result, null, 2))
+    console.log('🔍 Debug - result.totalFound:', result.totalFound)
+    console.log('🔍 Debug - result.cityStats:', JSON.stringify(result.cityStats))
 
     return new Response(
       JSON.stringify(result),

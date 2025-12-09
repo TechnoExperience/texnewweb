@@ -207,10 +207,10 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden w-full">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden w-full" style={{ width: '100%' }}>
       {/* Hero Header - Spotify Style */}
       <div className="bg-gradient-to-b from-[#00F9FF]/10 via-black to-black pt-20 pb-8 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F9FF] to-[#00D9E6] flex items-center justify-center">
               <Calendar className="w-6 h-6 text-black" />
@@ -224,7 +224,7 @@ export default function EventsPage() {
       </div>
 
       {/* Advanced Filters */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full py-6" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         <AdvancedFilters
           type="events"
           onFilterChange={setAdvancedFilters}
@@ -234,7 +234,7 @@ export default function EventsPage() {
 
       {/* Filters - Sticky */}
       <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full py-4" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap w-full md:w-auto">
               <button
@@ -292,7 +292,7 @@ export default function EventsPage() {
       </div>
 
       {/* Content */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full py-8" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         {/* Popular Events */}
         {popularEvents.length > 0 && (
           <div className="mb-12">
