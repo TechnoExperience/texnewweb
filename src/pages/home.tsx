@@ -23,9 +23,9 @@ export default function HomePage() {
   )
 
   // Cargar todos los lanzamientos recientes
-  const { data: latestReleases } = useSupabaseQuery<Release>(
+  const { data: latestReleases, loading: loadingReleases, error: releasesError } = useSupabaseQuery<Release>(
     TABLES.RELEASES,
-    (query) => query.order("release_date", { ascending: false }).limit(20)
+    (query) => query.order("release_date", { ascending: false }).limit(5)
   )
 
   // Cargar todas las reviews recientes
@@ -122,14 +122,23 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Releases Carousel - Single Row - Equal Cards */}
-            {latestReleases && latestReleases.length > 0 ? (
+            {/* Releases Grid - 5 lanzamientos máximo */}
+            {loadingReleases ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00F9FF]"></div>
+              </div>
+            ) : releasesError ? (
+              <div className="text-center text-red-400 py-12">
+                <p>Error al cargar los lanzamientos</p>
+                <p className="text-sm text-white/60 mt-2">{releasesError.message}</p>
+              </div>
+            ) : latestReleases && latestReleases.length > 0 ? (
               <div className="relative w-full overflow-visible">
-                <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 gap-4 lg:gap-6" style={{ width: 'calc(100% + 20%)', marginLeft: '-10%', paddingLeft: '10%', paddingRight: '10%' }}>
-                  {latestReleases.map((release, index) => (
+                <div className="flex flex-wrap gap-6 lg:gap-8 justify-center py-4">
+                  {latestReleases.slice(0, 5).map((release, index) => (
                     <div 
                       key={release.id} 
-                      className="flex-shrink-0 snap-center"
+                      className="flex-shrink-0"
                       style={{ width: "320px", minWidth: "320px" }}
                     >
                       <VinylCard release={release} index={index} />
@@ -139,7 +148,8 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="text-center text-white/60 py-12">
-                No hay lanzamientos disponibles
+                <p className="mb-2">No hay lanzamientos disponibles</p>
+                <p className="text-sm text-white/40">Los lanzamientos aparecerán aquí cuando se agreguen a la base de datos.</p>
               </div>
             )}
           </section>

@@ -6,8 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Techno Experience - Underground Techno Music Platform</title>
     <meta name="description" content="Tu fuente definitiva de noticias, eventos, lanzamientos y videos de música techno. Descubre el underground y mantente conectado con la comunidad techno global." />
+    
+    <!-- Preconnect para recursos críticos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cfgfshoobuvycrbhnvkd.supabase.co">
+    
+    <!-- Preload de recursos críticos -->
+    <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml">
+    
+    <!-- Prefetch de rutas comunes -->
+    <link rel="prefetch" href="/events" as="document">
+    <link rel="prefetch" href="/releases" as="document">
+    <link rel="prefetch" href="/news" as="document">
+    
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
   </head>
   <body>
     <div id="root"></div>

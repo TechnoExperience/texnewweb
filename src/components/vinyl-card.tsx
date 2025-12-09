@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { Music, Play, ArrowRight } from "lucide-react"
+import { Music, Play, ArrowRight, ExternalLink, Disc } from "lucide-react"
 import { OptimizedImage } from "@/components/ui/optimized-image"
 import { Badge } from "@/components/ui/badge"
 import { MiniPlayer } from "@/components/mini-player"
@@ -21,6 +21,19 @@ export function VinylCard({ release, index = 0 }: VinylCardProps) {
   const [currentDjImageIndex, setCurrentDjImageIndex] = useState(0)
   const releaseDate = new Date(release.release_date)
   const genres = Array.isArray(release.genre) ? release.genre : [release.genre || "Techno"]
+  const tracklist = Array.isArray(release.tracklist) ? release.tracklist : []
+  const links = release.links || {}
+  
+  const getReleaseTypeLabel = (type?: string) => {
+    const labels: Record<string, string> = {
+      'single': 'Single',
+      'ep': 'EP',
+      'album': 'Álbum',
+      'remix': 'Remix',
+      'compilation': 'Compilación'
+    }
+    return labels[type || ''] || type || ''
+  }
   
   // Fetch DJ profile images based on artist name
   useEffect(() => {
@@ -238,42 +251,131 @@ export function VinylCard({ release, index = 0 }: VinylCardProps) {
                 />
               ))}
               {/* Dark overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-black/80" />
+              <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/75 to-black/85" />
             </div>
           )}
           
           {/* Content */}
-          <div className="relative z-10">
-            <h3 className="text-xl font-heading text-white mb-2 line-clamp-1 group-hover:text-[#00F9FF] transition-colors drop-shadow-lg" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-              {release.title}
-            </h3>
-            <p className="text-[#00F9FF] font-space text-sm mb-3 line-clamp-1 font-semibold drop-shadow-lg">
-              {release.artist}
-            </p>
-            
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              {genres.slice(0, 2).map((genre, idx) => (
-                <Badge key={idx} className="bg-[#00F9FF]/20 text-[#00F9FF] border-[#00F9FF]/50 text-xs font-semibold backdrop-blur-sm">
-                  {genre}
-                </Badge>
-              ))}
+          <div className="relative z-10 space-y-3">
+            {/* Title and Release Type */}
+            <div>
+              <h3 className="text-xl font-heading text-white mb-1 line-clamp-1 group-hover:text-[#00F9FF] transition-colors drop-shadow-lg" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                {release.title}
+              </h3>
+              <p className="text-[#00F9FF] font-space text-sm mb-1 line-clamp-1 font-semibold drop-shadow-lg">
+                {release.artist}
+              </p>
+              {release.label && (
+                <p className="text-white/70 font-space text-xs mb-2 drop-shadow-lg">
+                  {release.label}
+                </p>
+              )}
             </div>
 
+            {/* Release Type and Techno Style */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {release.release_type && (
+                <Badge className="bg-white/20 text-white border-white/30 text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
+                  <Disc className="w-3 h-3" />
+                  {getReleaseTypeLabel(release.release_type)}
+                </Badge>
+              )}
+              {release.techno_style && (
+                <Badge className="bg-[#00F9FF]/20 text-[#00F9FF] border-[#00F9FF]/50 text-xs font-semibold backdrop-blur-sm">
+                  {release.techno_style}
+                </Badge>
+              )}
+            </div>
+            
+            {/* All Genres */}
+            {genres.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {genres.map((genre, idx) => (
+                  <Badge key={idx} className="bg-[#00F9FF]/20 text-[#00F9FF] border-[#00F9FF]/50 text-xs font-semibold backdrop-blur-sm">
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Tracklist */}
+            {tracklist.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-white/60 font-space text-xs font-semibold uppercase tracking-wide mb-1">Tracklist:</p>
+                <div className="space-y-1 max-h-24 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00F9FF]/30 scrollbar-track-transparent">
+                  {tracklist.map((track, idx) => (
+                    <p key={idx} className="text-white/80 font-space text-xs line-clamp-1">
+                      {idx + 1}. {track}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Streaming Links */}
+            {(links.spotify || links.beatport || links.soundcloud) && (
+              <div className="space-y-1 pt-2 border-t border-white/20">
+                <p className="text-white/60 font-space text-xs font-semibold uppercase tracking-wide mb-1">Escuchar:</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {links.spotify && (
+                    <a 
+                      href={links.spotify}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 border border-green-500/50 text-xs hover:bg-green-500/30 transition-colors"
+                    >
+                      <Music className="w-3 h-3" />
+                      Spotify
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  )}
+                  {links.beatport && (
+                    <a 
+                      href={links.beatport}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/50 text-xs hover:bg-orange-500/30 transition-colors"
+                    >
+                      <Music className="w-3 h-3" />
+                      Beatport
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  )}
+                  {links.soundcloud && (
+                    <a 
+                      href={links.soundcloud}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-orange-400/20 text-orange-300 border border-orange-400/50 text-xs hover:bg-orange-400/30 transition-colors"
+                    >
+                      <Music className="w-3 h-3" />
+                      SoundCloud
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Mini Player */}
-            <div className="mb-3">
+            <div className="pt-2 border-t border-white/20">
               <MiniPlayer
-                audioUrl={(release as any).preview_url || (release as any).audio_url || undefined}
+                audioUrl={(release as any).preview_url || (release as any).audio_url || release.player_url || undefined}
                 title={release.title}
                 artist={release.artist}
               />
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-white/20">
+            {/* Date and View Link */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/20">
               <span className="text-white/80 font-space text-xs drop-shadow-lg">
-                {format(releaseDate, "MMM yyyy", { locale: es })}
+                {format(releaseDate, "dd MMM yyyy", { locale: es })}
               </span>
               <div className="flex items-center gap-1 text-[#00F9FF] group-hover:translate-x-1 transition-transform">
-                <span className="text-xs font-space uppercase font-semibold">Ver</span>
+                <span className="text-xs font-space uppercase font-semibold">Ver más</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
             </div>

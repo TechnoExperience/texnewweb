@@ -228,7 +228,7 @@ export function ProfileForm({ profileType }: ProfileFormProps) {
       }
 
       // Agregar campos opcionales solo si tienen valor y existen en el schema
-      if (profile.name !== undefined) profilePayload.name = profile.name || null
+      // NO incluir 'name' porque puede no existir en el schema cache
       if (profile.nombre_artistico !== undefined) profilePayload.nombre_artistico = profile.nombre_artistico || null
       if (profile.bio !== undefined) profilePayload.bio = profile.bio || null
       if (profile.avatar_url !== undefined) profilePayload.avatar_url = profile.avatar_url || null
@@ -248,7 +248,8 @@ export function ProfileForm({ profileType }: ProfileFormProps) {
 
       if (profileError) {
         console.error("Error saving profile:", profileError)
-        // Si el error es por columnas que no existen, intentar sin ellas
+        
+        // Si el error es por city/country que no existen, intentar sin ellas
         if (profileError.message?.includes("city") || profileError.message?.includes("country")) {
           const { city, country, ...payloadWithoutLocation } = profilePayload
           const { error: retryError } = await supabase

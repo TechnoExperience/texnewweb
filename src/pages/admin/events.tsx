@@ -115,35 +115,53 @@ export default function AdminEventsPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Debes estar autenticado para sincronizar");
+        setSyncingRA(false);
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-ra-events-stealth`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        toast.error("Error de configuración: URL de Supabase no encontrada");
+        setSyncingRA(false);
+        return;
+      }
+
+      toast.info("Iniciando sincronización con Resident Advisor...", { duration: 2000 });
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/sync-ra-events-stealth`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
       }
 
       const result = await response.json();
       
-      if (result.success) {
-        toast.success(`Sincronización completada: ${result.totalCreated} creados, ${result.totalUpdated} actualizados`);
+      if (result.success !== false) {
+        const message = result.totalCreated > 0 || result.totalSkipped > 0
+          ? `Sincronización completada: ${result.totalCreated || 0} creados, ${result.totalSkipped || 0} ya existían. Total encontrados: ${result.totalFound || 0}`
+          : `Sincronización completada. Encontrados ${result.totalFound || 0} eventos.`;
+        
+        toast.success(message, { duration: 5000 });
         await fetchEvents(); // Refrescar la lista
       } else {
         toast.error("Error en la sincronización", {
-          description: result.errors?.join(', ') || "Error desconocido",
+          description: result.errors?.slice(0, 3).join(', ') || result.error || "Error desconocido",
+          duration: 5000,
         });
       }
     } catch (error) {
       console.error("Error syncing with RA:", error);
       toast.error("Error al sincronizar con Resident Advisor", {
         description: error instanceof Error ? error.message : "Error desconocido",
+        duration: 5000,
       });
     } finally {
       setSyncingRA(false);

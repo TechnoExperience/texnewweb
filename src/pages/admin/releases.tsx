@@ -58,7 +58,7 @@ export default function AdminReleasesPage() {
   async function handleDeleteConfirm() {
     if (!deleteConfirm.releaseId) return
 
-    const { error } = await supabase.from(TABLES.DJ_RELEASES).delete().eq("id", deleteConfirm.releaseId)
+    const { error } = await supabase.from("dj_releases").delete().eq("id", deleteConfirm.releaseId)
 
     if (error) {
       console.error("Error deleting release:", error)

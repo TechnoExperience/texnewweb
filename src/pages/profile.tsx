@@ -42,7 +42,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({
-    name: "",
     bio: "",
     city: "",
     country: "",
@@ -82,7 +81,6 @@ export default function ProfilePage() {
     if (data) {
       setProfile(data)
       setEditForm({
-        name: data.name || "",
         bio: data.bio || "",
         city: data.city || "",
         country: data.country || "",
@@ -130,14 +128,14 @@ export default function ProfilePage() {
   async function saveProfile() {
     if (!user) return
 
-    // Construir payload solo con campos que existen
+    // Construir payload solo con campos que SEGURO existen en el schema
+    // NO incluir 'name' porque puede no existir en algunas instalaciones
     const updatePayload: any = {
-      name: editForm.name,
       bio: editForm.bio,
       updated_at: new Date().toISOString(),
     }
 
-    // Solo agregar city y country si tienen valor (evitar error si no existen en schema)
+    // Solo agregar city y country si tienen valor
     if (editForm.city !== undefined && editForm.city !== null && editForm.city !== "") {
       updatePayload.city = editForm.city
     }
@@ -152,12 +150,13 @@ export default function ProfilePage() {
 
     if (error) {
       console.error("Error saving profile:", error)
-      // Si el error es por columnas que no existen, intentar sin ellas
+      
+      // Si el error es por city/country que no existen, intentar solo con bio
       if (error.message?.includes("city") || error.message?.includes("country")) {
-        const { city, country, ...payloadWithoutLocation } = updatePayload
+        const { city, country, ...payloadMinimal } = updatePayload
         const { error: retryError } = await supabase
           .from(TABLES.PROFILES)
-          .update(payloadWithoutLocation)
+          .update(payloadMinimal)
           .eq("id", user.id)
         
         if (retryError) {
@@ -296,19 +295,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-white/70 text-sm mb-1 block">Nombre</label>
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/20 text-white rounded"
-                    />
-                  ) : (
-                    <p className="text-white">{profile?.name || "No especificado"}</p>
-                  )}
-                </div>
 
                 <div>
                   <label className="text-white/70 text-sm mb-1 block">Biografía</label>

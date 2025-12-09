@@ -8,6 +8,8 @@ import { Video, Search, Eye, Edit, Trash2, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface AdminVideo {
   id: string
@@ -29,6 +31,10 @@ export default function AdminVideosPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED">("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; videoId: string | null }>({
+    open: false,
+    videoId: null,
+  })
 
   useEffect(() => {
     loadVideos()
@@ -287,7 +293,7 @@ export default function AdminVideosPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) => setDeleteConfirm({ open, videoId: deleteConfirm.videoId })}
+        onOpenChange={(open: boolean) => setDeleteConfirm({ open, videoId: deleteConfirm.videoId })}
         title="Eliminar Vídeo"
         description="¿Estás seguro de que quieres eliminar este vídeo? Esta acción no se puede deshacer."
         onConfirm={handleDeleteConfirm}

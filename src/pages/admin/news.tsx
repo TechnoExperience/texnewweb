@@ -20,6 +20,8 @@ import {
 import type { NewsArticle } from "@/types"
 import { analyzeSeo } from "@/lib/seo-analyzer"
 import { useUserProfile } from "@/hooks/useUserProfile"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export default function AdminNewsPage() {
   const { isAdmin, isEditor, userId } = useUserProfile()
@@ -297,7 +299,7 @@ export default function AdminNewsPage() {
 
       <ConfirmDialog
         open={deleteConfirm.open}
-        onOpenChange={(open) => setDeleteConfirm({ open, articleId: deleteConfirm.articleId })}
+        onOpenChange={(open: boolean) => setDeleteConfirm({ open, articleId: deleteConfirm.articleId })}
         title="Eliminar Noticia"
         description="¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer."
         onConfirm={handleDeleteConfirm}
