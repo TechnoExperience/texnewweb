@@ -122,7 +122,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Releases Grid - 5 lanzamientos máximo */}
+            {/* Releases Grid - 5 lanzamientos máximo - Una sola línea horizontal */}
             {loadingReleases ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00F9FF]"></div>
@@ -133,8 +133,8 @@ export default function HomePage() {
                 <p className="text-sm text-white/60 mt-2">{releasesError.message}</p>
               </div>
             ) : latestReleases && latestReleases.length > 0 ? (
-              <div className="relative w-full overflow-visible">
-                <div className="flex flex-wrap gap-6 lg:gap-8 justify-center py-4">
+              <div className="relative w-full overflow-x-auto overflow-y-hidden py-4">
+                <div className="flex gap-6 lg:gap-8 justify-start items-start" style={{ minWidth: 'max-content' }}>
                   {latestReleases.slice(0, 5).map((release, index) => (
                     <div 
                       key={release.id} 

@@ -316,19 +316,27 @@ export function HeroHeader({ onMenuToggle }: HeroHeaderProps) {
             {/* Left Section - Giant Title (SOLO TEXTO, SIN FOTO DE FONDO) */}
             <div className="flex-1 px-8 lg:px-20">
               <div className="max-w-4xl">
-                <h1
-                  key={activeArticle.id}
-                  className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-heading text-white leading-[0.9] mb-6 transition-all duration-700 ease-in-out"
-                  style={{
-                    fontFamily: "'Bebas Neue', system-ui, sans-serif",
-                    fontWeight: 900,
-                    letterSpacing: '-0.02em',
-                    textShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,0.5)',
-                    animation: 'fadeInSlide 0.7s ease-in-out',
-                  }}
-                >
-                  {activeArticle.title}
-                </h1>
+                {/* Caja contenedora para el título */}
+                <div className="bg-white/5 border border-white/10 p-6 md:p-8 lg:p-10 mb-6 min-h-[200px] md:min-h-[250px] lg:min-h-[300px] flex items-center justify-center">
+                  <h1
+                    key={activeArticle.id}
+                    className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-heading text-white leading-[1.1] transition-all duration-700 ease-in-out line-clamp-4 md:line-clamp-5"
+                    style={{
+                      fontFamily: "'Bebas Neue', system-ui, sans-serif",
+                      fontWeight: 900,
+                      letterSpacing: '-0.02em',
+                      textShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,0.5)',
+                      animation: 'fadeInSlide 0.7s ease-in-out',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 'var(--line-clamp, 4)',
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {activeArticle.title}
+                  </h1>
+                </div>
                 {activeArticle.excerpt && (
                   <p className="text-white/80 text-lg md:text-xl lg:text-2xl font-space max-w-3xl line-clamp-3">
                     {activeArticle.excerpt}
