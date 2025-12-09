@@ -168,8 +168,11 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 
-      Deno.env.get('SUPABASE_PROJECT_URL') || 
-      'https://cfgfshoobuvycrbhnvkd.supabase.co'
+      Deno.env.get('SUPABASE_PROJECT_URL')
+    
+    if (!supabaseUrl) {
+      throw new Error('SUPABASE_URL no configurado en Edge Function')
+    }
     
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 
       Deno.env.get('SERVICE_ROLE_KEY')
