@@ -19,7 +19,7 @@ export default function AdminEventsEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [event, setEvent] = useState<Partial<Event>>({
-    status: "PUBLISHED",
+    status: "pub",
     featured: false,
     language: "es",
   })
@@ -113,7 +113,7 @@ export default function AdminEventsEditPage() {
       ticket_url: event.ticket_url || "",
       featured: event.featured ?? false,
       language: event.language || "es",
-      status: event.status || "PUBLISHED",
+      status: event.status || "pub",
     }
 
     // Campos extendidos de la migración 00024
@@ -277,14 +277,13 @@ export default function AdminEventsEditPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">Estado</label>
                   <select
-                    value={event.status || "PUBLISHED"}
+                    value={event.status || "pub"}
                     onChange={(e) => handleChange("status", e.target.value)}
                     className="px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded"
                   >
-                    <option value="DRAFT">Borrador</option>
-                    <option value="PUBLISHED">Publicado</option>
-                    <option value="SOLD_OUT">Agotado</option>
-                    <option value="CANCELLED">Cancelado</option>
+                    <option value="draft">Borrador</option>
+                    <option value="pub">Publicado</option>
+                    <option value="can">Cancelado</option>
                   </select>
                 </div>
               </div>

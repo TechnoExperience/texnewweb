@@ -24,7 +24,7 @@ export default function AdminVideosEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [video, setVideo] = useState<Partial<Video>>({
-    status: "PENDING_REVIEW",
+    status: "pend",
     featured: false,
     language: "es",
     view_count: 0,
@@ -112,7 +112,7 @@ export default function AdminVideosEditPage() {
       language: video.language || "es",
       featured: video.featured ?? false,
       view_count: video.view_count || 0,
-      status: video.status || "PENDING_REVIEW",
+      status: video.status || "pend",
       provider: video.provider || embedPreview?.provider || null,
       embed_data: video.embed_data || embedPreview || null,
       uploader_id: video.uploader_id || null,

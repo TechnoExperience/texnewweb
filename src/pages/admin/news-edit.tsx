@@ -188,10 +188,10 @@ export default function AdminNewsEditPage() {
       // Establecer status según el rol
       if (isAdmin || isEditor) {
         // Admins y editores: publicar directamente
-        payload.status = "PUBLISHED"
+        payload.status = "pub"
       } else {
         // Usuarios normales: requiere aprobación
-        payload.status = "PENDING_REVIEW"
+        payload.status = "pend"
       }
     } else {
       // Al editar: solo actualizar status si es admin

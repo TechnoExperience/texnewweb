@@ -425,7 +425,7 @@ Deno.serve(async (req) => {
               ra_event_id: eventId,
               ra_synced: true,
               ra_sync_date: new Date().toISOString(),
-              status: 'DRAFT', // Requiere moderación
+              status: 'draft', // Requiere moderación (valores: draft, pub, can)
             }
 
             const insertResult = await supabase

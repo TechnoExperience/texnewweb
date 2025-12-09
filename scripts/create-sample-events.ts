@@ -37,7 +37,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: true,
     header_featured: true,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Barcelona Techno Festival",
@@ -53,7 +53,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: true,
     header_featured: true,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Valencia Techno Night",
@@ -69,7 +69,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: false,
     header_featured: false,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Bilbao Industrial Techno",
@@ -85,7 +85,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: true,
     header_featured: false,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Sevilla Deep Techno",
@@ -101,7 +101,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: false,
     header_featured: false,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Málaga Beach Techno",
@@ -117,7 +117,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: true,
     header_featured: true,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Zaragoza Minimal Techno",
@@ -133,7 +133,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: false,
     header_featured: false,
-    status: "PUBLISHED"
+    status: "pub"
   },
   {
     title: "Murcia Techno Underground",
@@ -149,7 +149,7 @@ const sampleEvents = [
     ticket_url: "https://example.com/tickets",
     featured: false,
     header_featured: false,
-    status: "PUBLISHED"
+    status: "pub"
   }
 ]
 

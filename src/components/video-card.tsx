@@ -47,7 +47,7 @@ export function VideoCard({ video, index = 0 }: VideoCardProps) {
               Destacado
             </div>
           )}
-          {video.status && video.status === "PENDING_REVIEW" && (
+          {video.status && video.status === "pend" && (
             <Badge className="absolute top-2 right-2 bg-yellow-500/90 text-black text-xs">
               Pendiente
             </Badge>

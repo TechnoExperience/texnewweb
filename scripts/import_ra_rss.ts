@@ -89,7 +89,7 @@ async function importEvents() {
             city: "Unknown City",
             country: "Unknown Country",
             featured: false,
-            status: "upcoming"
+            status: "draft" // Los eventos importados se crean como borrador para moderación
         }
 
         if (existing) {

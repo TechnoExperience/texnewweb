@@ -151,7 +151,7 @@ export default function ModerationPage() {
       const tableName = getTableName(resourceType)
       const { error } = await supabase
         .from(tableName)
-        .update({ status: "PUBLISHED" })
+        .update({ status: "pub" })
         .eq("id", resourceId)
 
       if (error) throw error
@@ -170,7 +170,7 @@ export default function ModerationPage() {
       const { error } = await supabase
         .from(tableName)
         .update({ 
-          status: "REJECTED",
+          status: "rej",
           verification_notes: reason || "Contenido rechazado por el administrador"
         })
         .eq("id", resourceId)

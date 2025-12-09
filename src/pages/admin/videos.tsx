@@ -22,7 +22,7 @@ interface AdminVideo {
   event_name?: string
   video_date: string
   category: string
-  status?: "PENDING_REVIEW" | "PUBLISHED" | "REJECTED"
+  status?: "pend" | "pub" | "rej"
   provider?: string
 }
 
@@ -30,7 +30,7 @@ export default function AdminVideosPage() {
   const [videos, setVideos] = useState<AdminVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED">("all")
+  const [statusFilter, setStatusFilter] = useState<"all" | "pend" | "pub" | "rej">("all")
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; videoId: string | null }>({
     open: false,
     videoId: null,
@@ -74,7 +74,7 @@ export default function AdminVideosPage() {
     setDeleteConfirm({ open: false, videoId: null })
   }
 
-  async function updateStatus(id: string, status: "PENDING_REVIEW" | "PUBLISHED" | "REJECTED") {
+  async function updateStatus(id: string, status: "pend" | "pub" | "rej") {
     const { error } = await supabase.from("videos").update({ status }).eq("id", id)
     if (error) {
       console.error("Error updating status:", error)
@@ -95,7 +95,7 @@ export default function AdminVideosPage() {
       video.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (video.event_name || "").toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || (video.status || "PENDING_REVIEW") === statusFilter
+    const matchesStatus = statusFilter === "all" || (video.status || "pend") === statusFilter
 
     return matchesSearch && matchesStatus
   })
@@ -203,14 +203,14 @@ export default function AdminVideosPage() {
                     {video.status && (
                       <Badge
                         className={
-                          video.status === "PUBLISHED"
+                          video.status === "pub"
                             ? "absolute top-2 left-2 bg-green-500"
-                            : video.status === "PENDING_REVIEW"
+                            : video.status === "pend"
                             ? "absolute top-2 left-2 bg-yellow-500"
                             : "absolute top-2 left-2 bg-red-500"
                         }
                       >
-                        {video.status === "PENDING_REVIEW" ? "Pendiente" : video.status === "PUBLISHED" ? "Publicado" : "Rechazado"}
+                        {video.status === "pend" ? "Pendiente" : video.status === "pub" ? "Publicado" : "Rechazado"}
                       </Badge>
                     )}
                   </div>
@@ -271,7 +271,7 @@ export default function AdminVideosPage() {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => updateStatus(video.id, "PUBLISHED")}
+                        onClick={() => updateStatus(video.id, "pub")}
                       >
                         Publicar
                       </Button>

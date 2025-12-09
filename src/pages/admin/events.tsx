@@ -38,10 +38,12 @@ export default function AdminEventsPage() {
     if (error) {
       console.error("Error fetching events:", error);
     } else {
-      // Calculate status and map image_url
+      // Map image_url and preserve status from database
+      // If status is not set in DB, calculate a virtual status for display
       const eventsWithStatus = (data || []).map((event: any) => ({
         ...event,
-        status: new Date(event.event_date) > new Date() ? "upcoming" : "past",
+        // Use status from DB if exists, otherwise calculate virtual status for display
+        status: event.status || (new Date(event.event_date) > new Date() ? "upcoming" : "past"),
         cover_image: event.image_url // Map image_url to cover_image if needed, or just use image_url
       }));
       setEvents(eventsWithStatus);

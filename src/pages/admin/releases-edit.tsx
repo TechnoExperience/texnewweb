@@ -24,7 +24,7 @@ export default function AdminReleasesEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [release, setRelease] = useState<Partial<Release>>({
-    status: "PUBLISHED",
+    status: "pub",
     featured: false,
     language: "es",
     genre: [],
@@ -218,7 +218,7 @@ export default function AdminReleasesEditPage() {
       release_type: release.release_type || null,
       tracklist: release.tracklist || [],
       links: release.links || {},
-      status: release.status || "PUBLISHED",
+      status: release.status || "pub",
       player_url: release.player_url || null,
       player_provider: release.player_provider || null,
       embed_html: release.embed_html || null,
@@ -524,12 +524,12 @@ export default function AdminReleasesEditPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">Estado</label>
                   <select
-                    value={release.status || "PUBLISHED"}
+                    value={release.status || "pub"}
                     onChange={(e) => handleChange("status", e.target.value)}
                     className="px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded"
                   >
-                    <option value="DRAFT">Borrador</option>
-                    <option value="PUBLISHED">Publicado</option>
+                    <option value="draft">Borrador</option>
+                    <option value="pub">Publicado</option>
                   </select>
                 </div>
               </div>
