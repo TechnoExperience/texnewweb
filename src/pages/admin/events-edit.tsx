@@ -8,17 +8,20 @@ import { supabase } from "@/lib/supabase"
 import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { toast } from "sonner"
 import type { Event } from "@/types"
 
 export default function AdminEventsEditPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { userId } = useUserProfile()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [event, setEvent] = useState<Partial<Event>>({
-    status: "PUBLISHED",
+    status: "pub",
     featured: false,
     language: "es",
   })
@@ -33,7 +36,9 @@ export default function AdminEventsEditPage() {
       const { data, error } = await supabase.from("events").select("*").eq("id", id).single()
       if (error) {
         console.error("Error loading event:", error)
-        alert("Error al cargar el evento")
+        toast.error("Error al cargar el evento", {
+          description: error.message || "No se pudo cargar el evento. Redirigiendo...",
+        })
         navigate("/admin/events")
       } else if (data) {
         setEvent(data)
@@ -89,7 +94,9 @@ export default function AdminEventsEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!event.title || !event.slug || !event.event_date || !event.city || !event.country) {
-      alert("Título, slug, fecha, ciudad y país son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título, slug, fecha, ciudad y país son obligatorios.",
+      })
       return
     }
 
@@ -108,7 +115,7 @@ export default function AdminEventsEditPage() {
       ticket_url: event.ticket_url || "",
       featured: event.featured ?? false,
       language: event.language || "es",
-      status: event.status || "PUBLISHED",
+      status: event.status || "pub",
     }
 
     // Campos extendidos de la migración 00024
@@ -119,15 +126,23 @@ export default function AdminEventsEditPage() {
     if (event.ticket_link_url) payload.ticket_link_url = event.ticket_link_url
     if (event.price_info) payload.price_info = event.price_info
 
+    // Agregar created_by al crear nuevo evento
+    if (!isEditMode && userId) {
+      payload.created_by = userId
+    }
+
     try {
       const result = await saveToCMS("events", payload, isEditMode ? id : undefined)
       if (!result.success) {
         throw result.error || new Error("Error al guardar el evento")
       }
       navigate("/admin/events")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving event:", error)
-      alert("Error al guardar el evento")
+      toast.error("Error al guardar el evento", {
+        description: error?.message || "No se pudo guardar el evento. Intenta de nuevo.",
+        duration: 5000,
+      })
     } finally {
       setSaving(false)
     }
@@ -269,14 +284,13 @@ export default function AdminEventsEditPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">Estado</label>
                   <select
-                    value={event.status || "PUBLISHED"}
+                    value={event.status || "pub"}
                     onChange={(e) => handleChange("status", e.target.value)}
                     className="px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded"
                   >
-                    <option value="DRAFT">Borrador</option>
-                    <option value="PUBLISHED">Publicado</option>
-                    <option value="SOLD_OUT">Agotado</option>
-                    <option value="CANCELLED">Cancelado</option>
+                    <option value="draft">Borrador</option>
+                    <option value="pub">Publicado</option>
+                    <option value="can">Cancelado</option>
                   </select>
                 </div>
               </div>

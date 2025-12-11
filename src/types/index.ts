@@ -49,7 +49,7 @@ export interface NewsArticle {
     related_events?: string[]
     related_releases?: string[]
     updated_at?: string
-    status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
+    status?: "draft" | "pend" | "pub" | "rej"
 }
 
 export interface Event {
@@ -69,7 +69,7 @@ export interface Event {
     header_featured?: boolean
     event_type?: "dj" | "promoter_festival" | "record_label" | "club"
     view_count?: number
-    status?: string
+    status?: "draft" | "pub" | "can" | "upcoming" | "past" // "upcoming" y "past" son valores virtuales solo para UI
     cover_image?: string
     related_club_id?: string
     related_promoter_id?: string
@@ -106,7 +106,7 @@ export interface Release {
   player_provider?: string
   embed_html?: string // HTML directo del iframe/embed
   player_type?: "tracklist" | "embed" | "auto" // Tipo de reproductor: tracklist, embed, o auto (detecta según datos disponibles)
-  status?: "DRAFT" | "PUBLISHED"
+  status?: "draft" | "pub"
 }
 
 export interface Video {
@@ -124,7 +124,7 @@ export interface Video {
     featured: boolean
     view_count: number
     video_type?: "aftermovie" | "live_set" | "music_video" | "dj_mix"
-    status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED"
+    status?: "draft" | "pend" | "pub" | "rej"
     published_date?: string
     video_url?: string
     provider?: string
@@ -247,6 +247,13 @@ export interface Product {
     tags: string[]
     metadata: Record<string, any>
     view_count: number
+    // Dropshipping fields
+    dropshipping_enabled?: boolean
+    dropshipping_url?: string
+    dropshipping_supplier_name?: string
+    dropshipping_supplier_email?: string
+    dropshipping_markup_percentage?: number
+    dropshipping_base_price?: number
     created_at: string
     updated_at: string
     // Relations (optional, loaded separately)

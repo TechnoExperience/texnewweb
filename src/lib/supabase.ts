@@ -7,14 +7,18 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 if (supabaseUrl) {
   // Si la URL contiene 'supabase.com/dashboard', es incorrecta
   if (supabaseUrl.includes('supabase.com/dashboard')) {
-    console.error("❌ URL de Supabase incorrecta detectada:", supabaseUrl)
-    console.error("💡 La URL debe ser: https://cfgfshoobuvycrbhnvkd.supabase.co")
+    console.error("❌ URL de Supabase incorrecta detectada")
+    if (import.meta.env.DEV) {
+      console.error("💡 La URL debe ser: https://[project-id].supabase.co")
+    }
     // Extraer el project ID de la URL incorrecta
     const projectIdMatch = supabaseUrl.match(/project\/([^\/]+)/)
     if (projectIdMatch) {
       const projectId = projectIdMatch[1]
       supabaseUrl = `https://${projectId}.supabase.co`
-      console.warn("⚠️ URL corregida automáticamente a:", supabaseUrl)
+      if (import.meta.env.DEV) {
+        console.warn("⚠️ URL corregida automáticamente")
+      }
     }
   }
   
@@ -24,16 +28,19 @@ if (supabaseUrl) {
 
 if (!supabaseUrl || !supabaseAnonKey) {
   const errorMessage = import.meta.env.PROD
-    ? "Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables. URL must be: https://cfgfshoobuvycrbhnvkd.supabase.co"
+    ? "Missing Supabase environment variables. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables."
     : "Missing Supabase environment variables. Please check .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set."
   
   console.error("❌ Supabase Configuration Error:", errorMessage)
-  console.error("📋 Current environment:", {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    url: supabaseUrl,
-    env: import.meta.env.MODE,
-  })
+  // NO mostrar valores sensibles en consola en producción
+  if (import.meta.env.DEV) {
+    console.error("📋 Current environment:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      url: supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'missing',
+      env: import.meta.env.MODE,
+    })
+  }
   
   throw new Error(errorMessage)
 }

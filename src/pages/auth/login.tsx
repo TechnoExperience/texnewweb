@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { z } from "zod"
+import { logger } from "@/lib/logger"
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "El email o nombre de usuario es requerido"),
@@ -52,7 +53,7 @@ export default function LoginPage() {
     setErrors({})
 
     try {
-      console.log("[Login] Attempting login for:", identifier.trim())
+      logger.debug("Attempting login", { identifier: identifier.trim() })
       
       // Determinar si es email o username
       const isEmail = identifier.includes("@")
@@ -60,7 +61,7 @@ export default function LoginPage() {
       
       // Si no es email, buscar el username en profiles para obtener el email
       if (!isEmail) {
-        console.log("[Login] Searching for username:", identifier.trim().toLowerCase())
+        logger.debug("Searching for username", { username: identifier.trim().toLowerCase() })
         
         try {
           // Primero intentar búsqueda exacta (case-insensitive)
@@ -72,7 +73,7 @@ export default function LoginPage() {
           
           // Si no se encuentra con búsqueda exacta, intentar con ilike
           if ((profileError && profileError.code === 'PGRST116') || !profileData) {
-            console.log("[Login] Exact match not found, trying ilike...")
+            logger.debug("Exact match not found, trying ilike")
             const { data: ilikeData, error: ilikeError } = await supabase
               .from('profiles')
               .select('email, username')
@@ -87,10 +88,10 @@ export default function LoginPage() {
             }
           }
           
-          console.log("[Login] Profile search result:", { profileData, profileError })
+          logger.debug("Profile search result", { found: !!profileData, hasError: !!profileError })
           
           if (profileError && profileError.code !== 'PGRST116') {
-            console.error("[Login] Error searching profile:", profileError)
+            logger.error("Error searching profile", profileError as Error, { profileError })
             toast.error("Error al buscar usuario", {
               description: profileError.message || "Error al buscar el usuario en la base de datos.",
             })
@@ -107,9 +108,9 @@ export default function LoginPage() {
           }
           
           emailToUse = profileData.email
-          console.log("[Login] Found email for username:", emailToUse)
+          logger.debug("Found email for username", { email: emailToUse })
         } catch (err: any) {
-          console.error("[Login] Exception searching username:", err)
+          logger.error("Exception searching username", err, { identifier })
           toast.error("Error al buscar usuario", {
             description: "Ocurrió un error al buscar el nombre de usuario. Intenta usar tu email.",
           })
@@ -118,7 +119,7 @@ export default function LoginPage() {
         }
       }
       
-      console.log("[Login] Attempting authentication with email:", emailToUse)
+      logger.debug("Attempting authentication", { email: emailToUse })
       
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
@@ -126,11 +127,10 @@ export default function LoginPage() {
       })
 
       if (error) {
-        console.error("[Login] Error details:", {
+        logger.error("Login error", error as Error, {
           message: error.message,
           status: error.status,
           name: error.name,
-          error: error
         })
         
         // Better error messages in Spanish
@@ -167,7 +167,7 @@ export default function LoginPage() {
       }
 
       if (!authData.user) {
-        console.error("[Login] No user returned from auth")
+        logger.error("No user returned from auth", new Error("Auth data missing user"))
         toast.error("Error al iniciar sesión", {
           description: "No se pudo obtener la información del usuario. Intenta de nuevo.",
         })
@@ -175,7 +175,7 @@ export default function LoginPage() {
         return
       }
 
-      console.log("[Login] User authenticated successfully:", authData.user.id)
+      logger.info("User authenticated successfully", { userId: authData.user.id })
 
       toast.success("¡Bienvenido!")
 
@@ -187,10 +187,10 @@ export default function LoginPage() {
         .single()
 
       if (profileError) {
-        console.error("[Login] Profile error:", profileError)
+        logger.warn("Profile error", { error: profileError, userId: authData.user.id })
         // If profile doesn't exist, create a basic one
         if (profileError.code === 'PGRST116') {
-          console.log("[Login] Profile doesn't exist, creating basic profile...")
+          logger.info("Profile doesn't exist, creating basic profile", { userId: authData.user.id })
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
@@ -201,7 +201,7 @@ export default function LoginPage() {
             })
           
           if (insertError) {
-            console.error("[Login] Error creating profile:", insertError)
+            logger.error("Error creating profile", insertError as Error, { userId: authData.user.id })
           }
           
           // Redirect to home or profile selection
@@ -221,7 +221,7 @@ export default function LoginPage() {
         navigate('/')
       }
     } catch (err) {
-      console.error("[Login] Unexpected error:", err)
+      logger.error("Unexpected login error", err as Error, { identifier })
       toast.error("Error inesperado al iniciar sesión")
     } finally {
       setLoading(false)

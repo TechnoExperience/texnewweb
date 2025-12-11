@@ -1,81 +1,96 @@
-# 🔧 Configurar Variables de Entorno en Vercel
+# 🔐 Configurar Variables de Entorno en Vercel
 
-## ⚠️ Error Actual
+## 📋 Variables Requeridas
+
+Para que la aplicación funcione correctamente en Vercel, necesitas configurar estas variables de entorno:
+
+### Variables de Supabase
+
 ```
-Missing Supabase environment variables. Please check .env file and ensure 
-VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.
+VITE_SUPABASE_URL=https://cfgfshoobuvycrbhnvkd.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmZ2ZzaG9vYnV2eWNyYmhudmtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MDk2NjEsImV4cCI6MjA3OTQ4NTY2MX0.CsM_dqls-fyk8qB7C17f2Mn3cnIrXRFTaY2BsDIJKOg
 ```
-
-## 📋 Variables de Entorno Requeridas
-
-Necesitas configurar las siguientes variables de entorno en Vercel:
-
-### Variables Obligatorias:
-1. **`VITE_SUPABASE_URL`**
-   - Tu URL de Supabase (ej: `https://xxxxx.supabase.co`)
-   - Se encuentra en: Supabase Dashboard → Settings → API → Project URL
-
-2. **`VITE_SUPABASE_ANON_KEY`**
-   - Tu clave anónima de Supabase
-   - Se encuentra en: Supabase Dashboard → Settings → API → Project API keys → `anon` `public`
-
-### Variables Opcionales (si las usas):
-- `VITE_APP_URL` - URL de tu aplicación
-- `SUPABASE_SERVICE_ROLE_KEY` - Solo si usas funciones de servidor (NO exponer en cliente)
 
 ## 🚀 Pasos para Configurar en Vercel
 
-### Opción 1: Desde el Dashboard de Vercel
+### 1. Acceder a la Configuración del Proyecto
 
-1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
-2. Haz clic en **Settings** (Configuración)
-3. Ve a **Environment Variables** (Variables de Entorno)
-4. Agrega cada variable:
-   - **Name**: `VITE_SUPABASE_URL`
-   - **Value**: Tu URL de Supabase
-   - **Environment**: Production, Preview, Development (selecciona todos)
-   - Haz clic en **Save**
-5. Repite para `VITE_SUPABASE_ANON_KEY`
+1. Ve a: https://vercel.com/dashboard
+2. Selecciona tu proyecto
+3. Ve a **Settings** → **Environment Variables**
 
-### Opción 2: Desde la CLI de Vercel
+### 2. Agregar Variables
 
-```bash
-# Instalar Vercel CLI si no lo tienes
-npm i -g vercel
+Para cada variable:
 
-# Configurar variables
-vercel env add VITE_SUPABASE_URL
-vercel env add VITE_SUPABASE_ANON_KEY
-```
+1. Click en **"Add New"**
+2. Ingresa el **Name** (ejemplo: `VITE_SUPABASE_URL`)
+3. Ingresa el **Value** (el valor correspondiente)
+4. **IMPORTANTE:** Marca los checkboxes para:
+   - ✅ **Production**
+   - ✅ **Preview**
+   - ✅ **Development**
+5. Click en **"Save"**
 
-## ✅ Verificar Configuración
+### 3. Variables a Configurar
 
-Después de agregar las variables:
+#### Variable 1: VITE_SUPABASE_URL
+- **Name:** `VITE_SUPABASE_URL`
+- **Value:** `https://cfgfshoobuvycrbhnvkd.supabase.co`
+- **Ambientes:** ✅ Production, ✅ Preview, ✅ Development
 
-1. **Redesplegar** el proyecto en Vercel
-   - Ve a **Deployments**
-   - Haz clic en los tres puntos (⋯) del último deployment
-   - Selecciona **Redeploy**
+#### Variable 2: VITE_SUPABASE_ANON_KEY
+- **Name:** `VITE_SUPABASE_ANON_KEY`
+- **Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmZ2ZzaG9vYnV2eWNyYmhudmtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MDk2NjEsImV4cCI6MjA3OTQ4NTY2MX0.CsM_dqls-fyk8qB7C17f2Mn3cnIrXRFTaY2BsDIJKOg`
+- **Ambientes:** ✅ Production, ✅ Preview, ✅ Development
 
-2. O espera a que Vercel detecte el nuevo commit y despliegue automáticamente
+## ⚠️ Importante
+
+### Después de Agregar Variables
+
+1. **Redeploy necesario:** Después de agregar/modificar variables, necesitas hacer un nuevo deployment
+2. **Verificar:** Las variables solo estarán disponibles en nuevos deployments, no en los existentes
+
+### Para Aplicar las Variables
+
+**Opción A: Desde Dashboard**
+1. Ve a **Deployments**
+2. Click en los tres puntos (⋯) del último deployment
+3. Selecciona **"Redeploy"**
+4. Marca **"Use existing Build Cache"** (opcional)
+5. Click en **"Redeploy"**
+
+**Opción B: Nuevo Deployment**
+- Haz un nuevo push al repositorio
+- O crea un nuevo deployment manualmente
+
+## ✅ Verificación
+
+Después del redeploy, verifica:
+
+1. **El sitio carga correctamente**
+2. **No hay errores en la consola del navegador**
+3. **Las consultas a Supabase funcionan:**
+   - Los eventos se cargan
+   - Las noticias se cargan
+   - El login funciona
 
 ## 🔒 Seguridad
 
-- ✅ **SÍ exponer** `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (son públicas)
-- ❌ **NO exponer** `SUPABASE_SERVICE_ROLE_KEY` (solo para servidor)
-- Las variables que empiezan con `VITE_` se exponen en el cliente
+- ✅ Estas son las credenciales **ANON** (públicas), seguras para el frontend
+- ✅ **NO** compartas la `SERVICE_ROLE_KEY` en el frontend
+- ✅ Las variables están encriptadas en Vercel
+- ✅ Solo accesibles durante el build y runtime
 
-## 📝 Nota
+## 📝 Notas
 
-Las variables de entorno deben estar configuradas **antes** del despliegue. Si ya desplegaste sin ellas, necesitas:
-1. Agregar las variables
-2. Redesplegar manualmente
+- Las variables con prefijo `VITE_` son expuestas al cliente
+- Son necesarias para que el frontend se conecte a Supabase
+- Estas credenciales son públicas por diseño (anon key)
 
 ---
 
-**¿Dónde encontrar tus credenciales de Supabase?**
-1. Ve a [Supabase Dashboard](https://app.supabase.com)
-2. Selecciona tu proyecto
-3. Ve a **Settings** → **API**
-4. Copia **Project URL** y **anon public** key
-
+**¿Problemas?** Si después de configurar las variables el sitio no funciona:
+1. Verifica que los nombres sean exactos (case-sensitive)
+2. Asegúrate de hacer un redeploy después de agregar variables
+3. Revisa los logs de build en Vercel Dashboard

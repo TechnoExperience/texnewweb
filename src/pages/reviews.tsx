@@ -93,10 +93,10 @@ export default function ReviewsPage() {
   if (error) return <ErrorMessage message="Error al cargar las reviews" />
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white w-full" style={{ width: '100%' }}>
       {/* Hero Header - Spotify Style */}
       <div className="bg-gradient-to-b from-[#00F9FF]/10 via-black to-black pt-20 pb-8">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F9FF] to-[#00D9E6] flex items-center justify-center">
               <Star className="w-6 h-6 text-black" />
@@ -110,7 +110,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Advanced Filters */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full py-6" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         <AdvancedFilters
           type="reviews"
           onFilterChange={setAdvancedFilters}
@@ -119,7 +119,7 @@ export default function ReviewsPage() {
 
       {/* Filters - Sticky */}
       <div className="sticky top-16 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full py-4" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-2 min-w-max">
@@ -176,7 +176,7 @@ export default function ReviewsPage() {
       </div>
 
       {/* Content */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full py-8" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         {filteredReviews && filteredReviews.length > 0 ? (
           <>
             <div className="flex items-center justify-between mb-6">

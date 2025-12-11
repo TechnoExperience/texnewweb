@@ -8,6 +8,8 @@ import { Video, Search, Eye, Edit, Trash2, Filter, Plus } from "lucide-react"
 import { Link } from "react-router-dom"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface AdminVideo {
   id: string
@@ -20,7 +22,7 @@ interface AdminVideo {
   event_name?: string
   video_date: string
   category: string
-  status?: "PENDING_REVIEW" | "PUBLISHED" | "REJECTED"
+  status?: "pend" | "pub" | "rej"
   provider?: string
 }
 
@@ -28,7 +30,11 @@ export default function AdminVideosPage() {
   const [videos, setVideos] = useState<AdminVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | "PENDING_REVIEW" | "PUBLISHED" | "REJECTED">("all")
+  const [statusFilter, setStatusFilter] = useState<"all" | "pend" | "pub" | "rej">("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; videoId: string | null }>({
+    open: false,
+    videoId: null,
+  })
 
   useEffect(() => {
     loadVideos()
@@ -49,24 +55,35 @@ export default function AdminVideosPage() {
   }
 
   async function deleteVideo(id: string) {
-    if (!window.confirm("¿Seguro que quieres eliminar este vídeo?")) return
-
-    const { error } = await supabase.from("videos").delete().eq("id", id)
-    if (error) {
-      console.error("Error deleting video:", error)
-      alert("Error al eliminar el vídeo")
-      return
-    }
-    setVideos((prev) => prev.filter((v) => v.id !== id))
+    setDeleteConfirm({ open: true, videoId: id })
   }
 
-  async function updateStatus(id: string, status: "PENDING_REVIEW" | "PUBLISHED" | "REJECTED") {
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.videoId) return
+
+    const { error } = await supabase.from("videos").delete().eq("id", deleteConfirm.videoId)
+    if (error) {
+      console.error("Error deleting video:", error)
+      toast.error("Error al eliminar el vídeo", {
+        description: error.message || "No se pudo eliminar el vídeo.",
+      })
+    } else {
+      setVideos((prev) => prev.filter((v) => v.id !== deleteConfirm.videoId))
+      toast.success("Vídeo eliminado correctamente")
+    }
+    setDeleteConfirm({ open: false, videoId: null })
+  }
+
+  async function updateStatus(id: string, status: "pend" | "pub" | "rej") {
     const { error } = await supabase.from("videos").update({ status }).eq("id", id)
     if (error) {
       console.error("Error updating status:", error)
-      alert("Error al actualizar el estado del vídeo")
+      toast.error("Error al actualizar el estado del vídeo", {
+        description: error.message || "No se pudo actualizar el estado.",
+      })
       return
     }
+    toast.success(`Estado actualizado a ${status}`)
     setVideos((prev) =>
       prev.map((v) => (v.id === id ? { ...v, status } : v)),
     )
@@ -78,7 +95,7 @@ export default function AdminVideosPage() {
       video.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (video.event_name || "").toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || (video.status || "PENDING_REVIEW") === statusFilter
+    const matchesStatus = statusFilter === "all" || (video.status || "pend") === statusFilter
 
     return matchesSearch && matchesStatus
   })
@@ -186,14 +203,14 @@ export default function AdminVideosPage() {
                     {video.status && (
                       <Badge
                         className={
-                          video.status === "PUBLISHED"
+                          video.status === "pub"
                             ? "absolute top-2 left-2 bg-green-500"
-                            : video.status === "PENDING_REVIEW"
+                            : video.status === "pend"
                             ? "absolute top-2 left-2 bg-yellow-500"
                             : "absolute top-2 left-2 bg-red-500"
                         }
                       >
-                        {video.status === "PENDING_REVIEW" ? "Pendiente" : video.status === "PUBLISHED" ? "Publicado" : "Rechazado"}
+                        {video.status === "pend" ? "Pendiente" : video.status === "pub" ? "Publicado" : "Rechazado"}
                       </Badge>
                     )}
                   </div>
@@ -254,7 +271,7 @@ export default function AdminVideosPage() {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => updateStatus(video.id, "PUBLISHED")}
+                        onClick={() => updateStatus(video.id, "pub")}
                       >
                         Publicar
                       </Button>
@@ -273,6 +290,17 @@ export default function AdminVideosPage() {
             ))}
           </div>
         )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open: boolean) => setDeleteConfirm({ open, videoId: deleteConfirm.videoId })}
+        title="Eliminar Vídeo"
+        description="¿Estás seguro de que quieres eliminar este vídeo? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
       </div>
     </div>
   )

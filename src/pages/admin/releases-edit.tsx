@@ -10,6 +10,8 @@ import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmbeddedPlayer } from "@/components/embedded-player"
 import { getEmbedFromUrl } from "@/lib/embeds"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { toast } from "sonner"
 import type { Release } from "@/types"
 
 const GENRES = ["acid", "hard", "melodic", "minimal", "industrial", "progressive", "raw", "hypnotic", "dark", "experimental"]
@@ -19,11 +21,12 @@ export default function AdminReleasesEditPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { userId } = useUserProfile()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [release, setRelease] = useState<Partial<Release>>({
-    status: "PUBLISHED",
+    status: "pub",
     featured: false,
     language: "es",
     genre: [],
@@ -43,7 +46,9 @@ export default function AdminReleasesEditPage() {
       const { data, error } = await supabase.from("dj_releases").select("*").eq("id", id).single()
       if (error) {
         console.error("Error loading release:", error)
-        alert("Error al cargar el lanzamiento")
+        toast.error("Error al cargar el lanzamiento", {
+          description: error.message || "No se pudo cargar el lanzamiento. Redirigiendo...",
+        })
         navigate("/admin/releases")
       } else if (data) {
         setRelease({
@@ -131,7 +136,10 @@ export default function AdminReleasesEditPage() {
       
       // Permitir un margen de error del 5% (0.95 a 1.05)
       if (aspectRatio < 0.95 || aspectRatio > 1.05) {
-        alert("La imagen debe ser cuadrada (relación 1:1). Por favor, recorta la imagen antes de subirla.")
+        toast.error("Imagen no válida", {
+          description: "La imagen debe ser cuadrada (relación 1:1). Por favor, recorta la imagen antes de subirla.",
+          duration: 5000,
+        })
         return
       }
       
@@ -143,7 +151,9 @@ export default function AdminReleasesEditPage() {
     
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl)
-      alert("Error al cargar la imagen. Por favor, verifica que sea un archivo de imagen válido.")
+      toast.error("Error al cargar la imagen", {
+        description: "Por favor, verifica que sea un archivo de imagen válido.",
+      })
     }
     
     img.src = objectUrl
@@ -180,13 +190,17 @@ export default function AdminReleasesEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!release.title || !release.artist || !release.label || !release.release_date) {
-      alert("Título, artista, label y fecha son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título, artista, label y fecha son obligatorios.",
+      })
       return
     }
     
     // Validar que la portada sea obligatoria
     if (!release.cover_art) {
-      alert("La portada (imagen cuadrada 1:1) es obligatoria.")
+      toast.error("Portada obligatoria", {
+        description: "La portada (imagen cuadrada 1:1) es obligatoria.",
+      })
       return
     }
 
@@ -206,11 +220,16 @@ export default function AdminReleasesEditPage() {
       release_type: release.release_type || null,
       tracklist: release.tracklist || [],
       links: release.links || {},
-      status: release.status || "PUBLISHED",
+      status: release.status || "pub",
       player_url: release.player_url || null,
       player_provider: release.player_provider || null,
       embed_html: release.embed_html || null,
       player_type: release.player_type || "auto",
+    }
+
+    // Agregar created_by al crear nuevo release
+    if (!isEditMode && userId) {
+      payload.created_by = userId
     }
 
     try {
@@ -219,9 +238,12 @@ export default function AdminReleasesEditPage() {
         throw result.error || new Error("Error al guardar el lanzamiento")
       }
       navigate("/admin/releases")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving release:", error)
-      alert("Error al guardar el lanzamiento")
+      toast.error("Error al guardar el lanzamiento", {
+        description: error?.message || "No se pudo guardar el lanzamiento. Intenta de nuevo.",
+        duration: 5000,
+      })
     } finally {
       setSaving(false)
     }
@@ -509,12 +531,12 @@ export default function AdminReleasesEditPage() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">Estado</label>
                   <select
-                    value={release.status || "PUBLISHED"}
+                    value={release.status || "pub"}
                     onChange={(e) => handleChange("status", e.target.value)}
                     className="px-3 py-2 bg-zinc-900 border border-zinc-700 text-white rounded"
                   >
-                    <option value="DRAFT">Borrador</option>
-                    <option value="PUBLISHED">Publicado</option>
+                    <option value="draft">Borrador</option>
+                    <option value="pub">Publicado</option>
                   </select>
                 </div>
               </div>

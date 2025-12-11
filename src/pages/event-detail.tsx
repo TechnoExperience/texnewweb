@@ -14,7 +14,11 @@ import {
   Ticket,
   TrendingUp,
   Eye,
-  Star
+  Star,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Navigation
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -39,6 +43,8 @@ export default function EventDetailPage() {
   const { slug } = useParams<{ slug: string }>()
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [shareUrl, setShareUrl] = useState("")
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [promoter, setPromoter] = useState<any>(null)
 
   const queryFn = useCallback(
     (query: any) => query.eq("slug", slug || ""),
@@ -79,6 +85,56 @@ export default function EventDetailPage() {
       incrementViewCount()
     }
   }, [event?.id, event?.slug, event?.view_count])
+
+  // Fetch promoter/organization info
+  useEffect(() => {
+    const fetchPromoter = async () => {
+      if (event?.promoter_id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, name, profile_type, avatar_url, city, country")
+          .eq("id", event.promoter_id)
+          .single()
+        if (data) setPromoter(data)
+      }
+    }
+    fetchPromoter()
+  }, [event?.promoter_id])
+
+  // Generate calendar link
+  const generateCalendarLink = () => {
+    if (!event) return ""
+    const startDate = new Date(event.event_date)
+    const endDate = event.end_datetime ? new Date(event.end_datetime) : new Date(startDate.getTime() + 6 * 60 * 60 * 1000) // Default 6 hours
+    
+    const formatDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+    }
+    
+    const title = encodeURIComponent(event.title)
+    const location = encodeURIComponent(`${event.venue || event.city}, ${event.country}`)
+    const details = encodeURIComponent(event.description?.replace(/<[^>]*>/g, '').substring(0, 500) || '')
+    
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatDate(startDate)}/${formatDate(endDate)}&details=${details}&location=${location}`
+  }
+
+  // Generate map link
+  const generateMapLink = () => {
+    if (!event) return ""
+    const location = encodeURIComponent(`${event.venue || event.city}, ${event.country}`)
+    return `https://www.google.com/maps/search/?api=1&query=${location}`
+  }
+
+  // Get event type label
+  const getEventTypeLabel = (type?: string) => {
+    const labels: Record<string, string> = {
+      'dj': 'DJ SET',
+      'promoter_festival': 'FESTIVAL',
+      'record_label': 'LABEL',
+      'club': 'CLUB'
+    }
+    return labels[type || ''] || 'TECHNO'
+  }
 
 
   if (loading) return <LoadingSpinner />
@@ -148,85 +204,58 @@ export default function EventDetailPage() {
           </div>
         </div>
 
-        {/* Hero Content */}
+        {/* Hero Content - Redesigned like xsmusic.es */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-6 lg:p-12">
-          <div className="w-full ">
-            {/* Date Badge */}
-            <div className="mb-6 flex items-center gap-4 flex-wrap">
-              <div className="px-6 py-3 bg-[#00F9FF] border-2 border-white/30 backdrop-blur-sm">
-                <div className="text-4xl font-heading text-white leading-none mb-1" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-                  {format(eventDate, "d", { locale: es })}
-                </div>
-                <div className="text-xs font-space text-white/90 uppercase tracking-wider">
-                  {format(eventDate, "MMM yyyy", { locale: es })}
-                </div>
-              </div>
-              
-              <Badge className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white">
-                {getDateLabel()}
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Location Badge - Top */}
+            <div className="mb-4">
+              <Badge className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-space uppercase tracking-wider">
+                {event.city?.toUpperCase() || 'CIUDAD'}, {event.country?.toUpperCase() || 'ESPAÑA'}
               </Badge>
-
-              {event.featured && (
-                <Badge className="px-4 py-2 bg-gradient-to-r from-[#00D9E6] to-[#00F9FF] border-0 text-black">
-                  <Star className="w-3 h-3 mr-1 fill-current" />
-                  Destacado
-                </Badge>
-              )}
-
-              {event.view_count && event.view_count > 0 && (
-                <div className="flex items-center gap-2 text-white/70 text-sm font-space">
-                  <Eye className="w-4 h-4" />
-                  <span>{event.view_count} vistas</span>
-                </div>
-              )}
             </div>
 
             {/* Title */}
             <h1 
-              className="text-5xl md:text-6xl lg:text-7xl font-heading text-white mb-6 leading-tight"
+              className="text-4xl md:text-5xl lg:text-6xl font-heading text-white mb-4 leading-tight"
               style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
             >
               {event.title}
             </h1>
 
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-white/90 mb-8">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#00F9FF]" />
-                <span className="font-space">
-                  {event.venue || event.city}, {event.country}
+            {/* Venue */}
+            {event.venue && (
+              <div className="mb-6">
+                <p className="text-2xl md:text-3xl font-heading text-white/90" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                  {event.venue}
+                </p>
+              </div>
+            )}
+
+            {/* Date and Time - Enhanced format like xsmusic.es */}
+            <div className="mb-6 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 text-white/90">
+                <Calendar className="w-5 h-5 text-[#00F9FF]" />
+                <span className="font-space text-lg">
+                  {format(eventDate, "d 'DE' MMMM 'DE' yyyy", { locale: es }).toUpperCase()}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <span className="text-white/50">/</span>
+              <div className="flex items-center gap-2 text-white/90">
                 <Clock className="w-5 h-5 text-[#00F9FF]" />
-                <span className="font-space">
-                  {format(eventDate, "HH:mm", { locale: es })}h
+                <span className="font-space text-lg">
+                  {format(eventDate, "HH:mm", { locale: es })}
+                  {event.end_datetime && ` - ${format(new Date(event.end_datetime), "HH:mm", { locale: es })}`}
                 </span>
               </div>
-              {event.lineup && event.lineup.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#00F9FF]" />
-                  <span className="font-space">
-                    {event.lineup.length} artista{event.lineup.length > 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
             </div>
 
-            {/* CTA Button */}
-            {event.ticket_url && (
-              <Button
-                asChild
-                size="lg"
-                className="bg-[#00F9FF] hover:bg-[#00D9E6] text-black px-8 py-6 text-lg font-heading uppercase tracking-wider shadow-2xl hover:shadow-[#00F9FF]/50 transition-all duration-300"
-                style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
-              >
-                <a href={event.ticket_url} target="_blank" rel="noopener noreferrer">
-                  <Ticket className="w-5 h-5 mr-2" />
-                  Comprar Entradas
-                  <ExternalLink className="w-4 h-4 ml-2" />
-                </a>
-              </Button>
+            {/* Genre/Event Type Badge */}
+            {event.event_type && (
+              <div className="mb-6">
+                <Badge className="px-4 py-2 bg-[#00F9FF] text-black text-sm font-bold uppercase tracking-wider">
+                  {getEventTypeLabel(event.event_type)}
+                </Badge>
+              </div>
             )}
           </div>
         </div>
@@ -245,7 +274,7 @@ export default function EventDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Description Section */}
+            {/* Description Section - Expandable like xsmusic.es */}
             <section className="bg-white/5 border border-white/10 p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-1 h-12 bg-[#00F9FF]" />
@@ -253,66 +282,113 @@ export default function EventDetailPage() {
                   className="text-3xl font-heading text-white"
                   style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
                 >
-                  SOBRE EL EVENTO
+                  INFO
                 </h2>
               </div>
               <div 
-                className="text-white/80 font-space leading-relaxed text-base prose prose-invert "
+                className={`text-white/80 font-space leading-relaxed text-base prose prose-invert transition-all duration-300 ${
+                  !isDescriptionExpanded ? 'line-clamp-4' : ''
+                }`}
                 dangerouslySetInnerHTML={{ __html: event.description || "No hay descripción disponible." }}
               />
+              {event.description && event.description.length > 200 && (
+                <button
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  className="mt-4 flex items-center gap-2 text-[#00F9FF] hover:text-[#00D9E6] transition-colors font-space text-sm uppercase tracking-wider"
+                >
+                  {isDescriptionExpanded ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Ver menos información
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Ver mas información
+                    </>
+                  )}
+                </button>
+              )}
             </section>
 
-            {/* Lineup Section - Enhanced */}
+            {/* Artists Section - Enhanced like xsmusic.es */}
             {event.lineup && event.lineup.length > 0 && (
-              <section className="relative bg-gradient-to-br from-black/80 via-white/5 to-black/80 border-2 border-white/10 p-10 backdrop-blur-sm overflow-hidden">
-                {/* Animated Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 249, 255, 0.1) 10px, rgba(0, 249, 255, 0.1) 20px)`
-                  }} />
+              <section className="bg-white/5 border border-white/10 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-1 h-12 bg-[#00F9FF]" />
+                  <h2 
+                    className="text-3xl font-heading text-white"
+                    style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
+                  >
+                    ARTISTAS ({event.lineup.length})
+                  </h2>
                 </div>
-                
-                <div className="relative z-10">
-                  <div className="flex items-center gap-4 mb-10">
-                    <div className="w-2 h-16 bg-gradient-to-b from-[#00F9FF] to-transparent" />
-                    <h2 
-                      className="text-4xl md:text-5xl font-heading text-white flex items-center gap-4"
-                      style={{ 
-                        fontFamily: "'Bebas Neue', system-ui, sans-serif",
-                        textShadow: "0 4px 20px rgba(0, 249, 255, 0.3)"
-                      }}
+                <div className="space-y-4">
+                  {event.lineup.map((artist, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00F9FF]/50 transition-all group"
                     >
-                      <Music className="w-10 h-10 text-[#00F9FF] animate-pulse" />
-                      LINE-UP
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {event.lineup.map((artist, index) => (
-                      <div
-                        key={index}
-                        className="group relative flex items-center gap-5 p-6 bg-gradient-to-r from-white/5 via-white/10 to-white/5 hover:from-white/10 hover:via-white/15 hover:to-white/10 border-2 border-white/10 hover:border-[#00F9FF]/70 transition-all duration-500 hover:shadow-2xl hover:shadow-[#00F9FF]/30"
-                      >
-                        {/* Number Badge - Enhanced */}
-                        <div className="relative w-16 h-16 flex-shrink-0">
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#00D9E6] via-[#00F9FF] to-[#00D9E6] rounded-full animate-pulse" />
-                          <div className="absolute inset-0 flex items-center justify-center text-black font-heading text-2xl z-10" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-                            {index + 1}
-                          </div>
+                      <div className="flex-1">
+                        <h3 className="text-white font-heading text-xl group-hover:text-[#00F9FF] transition-colors" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                          {artist}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs border-white/20 text-white/70">
+                            {getEventTypeLabel(event.event_type) || 'TECHNO'}
+                          </Badge>
+                          <span className="text-white/50 text-xs font-space">|</span>
+                          <span className="text-white/50 text-xs font-space">{event.country || 'España'}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-heading text-2xl group-hover:text-[#00F9FF] transition-colors mb-2" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
-                            {artist}
-                          </h3>
-                          {index === 0 && (
-                            <Badge className="bg-gradient-to-r from-[#00D9E6] to-[#00F9FF] border-0 text-black px-3 py-1 text-xs font-bold">
-                              HEADLINER
-                            </Badge>
-                          )}
-                        </div>
-                        {/* Hover Arrow */}
-                        <ArrowRight className="w-5 h-5 text-white/30 group-hover:text-[#00F9FF] group-hover:translate-x-2 transition-all opacity-0 group-hover:opacity-100" />
                       </div>
-                    ))}
+                      {index === 0 && (
+                        <Badge className="bg-[#00F9FF] text-black px-3 py-1 text-xs font-bold">
+                          HEADLINER
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Organizations/Promoters Section - Like xsmusic.es */}
+            {promoter && (
+              <section className="bg-white/5 border border-white/10 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-1 h-12 bg-[#00F9FF]" />
+                  <h2 
+                    className="text-3xl font-heading text-white"
+                    style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}
+                  >
+                    ORGANIZACIONES (1)
+                  </h2>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#00F9FF]/50 transition-all group">
+                  {promoter.avatar_url && (
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
+                      <OptimizedImage
+                        src={promoter.avatar_url}
+                        alt={promoter.name || 'Organizador'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-white font-heading text-xl group-hover:text-[#00F9FF] transition-colors" style={{ fontFamily: "'Bebas Neue', system-ui, sans-serif" }}>
+                      {promoter.name || 'Organizador'}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs border-white/20 text-white/70">
+                        {promoter.profile_type?.toUpperCase() || 'PROMOTER'}
+                      </Badge>
+                      {promoter.city && (
+                        <>
+                          <span className="text-white/50 text-xs font-space">|</span>
+                          <span className="text-white/50 text-xs font-space">{promoter.city}, {promoter.country || 'España'}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -404,7 +480,28 @@ export default function EventDetailPage() {
                 </Button>
               )}
 
-              <div className="mt-6 pt-6 border-t border-white/10">
+              {/* Action Buttons - Like xsmusic.es */}
+              <div className="mt-6 pt-6 border-t border-white/10 space-y-3">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-white/20 text-white hover:bg-white/10 hover:border-[#00F9FF]/50"
+                >
+                  <a href={generateCalendarLink()} target="_blank" rel="noopener noreferrer">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Añadir a tu calendario
+                  </a>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-white/20 text-white hover:bg-white/10 hover:border-[#00F9FF]/50"
+                >
+                  <a href={generateMapLink()} target="_blank" rel="noopener noreferrer">
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Ver mapa
+                  </a>
+                </Button>
                 <SocialShare 
                   url={`/events/${event.slug}`}
                   title={event.title}
@@ -454,6 +551,14 @@ export default function EventDetailPage() {
               </div>
             )}
           </aside>
+        </div>
+
+        {/* Comments Section - Like xsmusic.es */}
+        <div className="mt-12">
+          <CommentsSection 
+            resourceType="event"
+            resourceId={event.id}
+          />
         </div>
       </div>
       </div>

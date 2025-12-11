@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/constants/tables";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Search, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Calendar, Search, Plus, Edit, Trash2, Eye, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import type { Event } from "@/types";
 
@@ -17,6 +20,11 @@ export default function AdminEventsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; eventId: string | null }>({
+    open: false,
+    eventId: null,
+  });
+  const [syncingRA, setSyncingRA] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -24,16 +32,18 @@ export default function AdminEventsPage() {
 
   async function fetchEvents() {
     const { data, error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .select("*")
       .order("event_date", { ascending: false });
     if (error) {
       console.error("Error fetching events:", error);
     } else {
-      // Calculate status and map image_url
+      // Map image_url and preserve status from database
+      // If status is not set in DB, calculate a virtual status for display
       const eventsWithStatus = (data || []).map((event: any) => ({
         ...event,
-        status: new Date(event.event_date) > new Date() ? "upcoming" : "past",
+        // Use status from DB if exists, otherwise calculate virtual status for display
+        status: event.status || (new Date(event.event_date) > new Date() ? "upcoming" : "past"),
         cover_image: event.image_url // Map image_url to cover_image if needed, or just use image_url
       }));
       setEvents(eventsWithStatus);
@@ -42,47 +52,121 @@ export default function AdminEventsPage() {
   }
 
   async function deleteEvent(id: string) {
-    if (!confirm(t("cms.confirmDelete"))) return;
-    const { error } = await supabase.from("events").delete().eq("id", id);
+    setDeleteConfirm({ open: true, eventId: id });
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.eventId) return;
+    
+    const { error } = await supabase.from(TABLES.EVENTS).delete().eq("id", deleteConfirm.eventId);
     if (error) {
       console.error("Error deleting event:", error);
-      alert("Error al eliminar el evento");
+      toast.error("Error al eliminar el evento", {
+        description: error.message || "No se pudo eliminar el evento.",
+      });
     } else {
-      setEvents(events.filter((e) => e.id !== id));
+      setEvents(events.filter((e) => e.id !== deleteConfirm.eventId));
+      toast.success("Evento eliminado correctamente");
     }
+    setDeleteConfirm({ open: false, eventId: null });
   }
 
   async function toggleFeatured(event: Event) {
     const { error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .update({ featured: !event.featured })
       .eq("id", event.id);
     if (error) {
       console.error("Error toggling featured:", error);
-      alert("Error al actualizar featured");
+      toast.error("Error al actualizar featured", {
+        description: error.message || "No se pudo actualizar el estado.",
+      });
     } else {
       setEvents(
         events.map((e) =>
           e.id === event.id ? { ...e, featured: !e.featured } : e
         )
       );
+      toast.success(`Evento ${!event.featured ? "destacado" : "removido de destacados"}`);
     }
   }
 
   async function toggleHeaderFeatured(event: Event) {
     const { error } = await supabase
-      .from("events")
+      .from(TABLES.EVENTS)
       .update({ header_featured: !event.header_featured })
       .eq("id", event.id);
     if (error) {
       console.error("Error toggling header featured:", error);
-      alert("Error al actualizar evento a cabecera");
+      toast.error("Error al actualizar evento a cabecera", {
+        description: error.message || "No se pudo actualizar el estado.",
+      });
     } else {
       setEvents(
         events.map((e) =>
           e.id === event.id ? { ...e, header_featured: !e.header_featured } : e
         )
       );
+      toast.success(`Evento ${!event.header_featured ? "añadido a" : "removido de"} cabecera`);
+    }
+  }
+
+  async function syncWithResidentAdvisor() {
+    setSyncingRA(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Debes estar autenticado para sincronizar");
+        setSyncingRA(false);
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        toast.error("Error de configuración: URL de Supabase no encontrada");
+        setSyncingRA(false);
+        return;
+      }
+
+      toast.info("Iniciando sincronización con Resident Advisor...", { duration: 2000 });
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/sync-ra-events-stealth`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success !== false) {
+        const message = result.totalCreated > 0 || result.totalSkipped > 0
+          ? `Sincronización completada: ${result.totalCreated || 0} creados, ${result.totalSkipped || 0} ya existían. Total encontrados: ${result.totalFound || 0}`
+          : `Sincronización completada. Encontrados ${result.totalFound || 0} eventos.`;
+        
+        toast.success(message, { duration: 5000 });
+        await fetchEvents(); // Refrescar la lista
+      } else {
+        toast.error("Error en la sincronización", {
+          description: result.errors?.slice(0, 3).join(', ') || result.error || "Error desconocido",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error syncing with RA:", error);
+      toast.error("Error al sincronizar con Resident Advisor", {
+        description: error instanceof Error ? error.message : "Error desconocido",
+        duration: 5000,
+      });
+    } finally {
+      setSyncingRA(false);
     }
   }
 
@@ -106,17 +190,27 @@ export default function AdminEventsPage() {
   return (
     <div className="min-h-screen bg-black">
       <div className="w-full px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Calendar className="h-8 w-8 text-white" />
           <h1 className="text-3xl font-bold text-white">{t("cms.manageEvents")}</h1>
         </div>
-        <Button asChild className="bg-[#00F9FF] text-black hover:bg-[#00D9E6]">
-          <Link to="/admin/events/new">
-            <Plus className="h-4 w-4 mr-2" />
-            {t("cms.createEvent")}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={syncWithResidentAdvisor}
+            disabled={syncingRA}
+            className="bg-[#00D9E6] text-black hover:bg-[#00F9FF] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncingRA ? 'animate-spin' : ''}`} />
+            {syncingRA ? 'Sincronizando...' : 'Sincronizar con RA'}
+          </Button>
+          <Button asChild className="bg-[#00F9FF] text-black hover:bg-[#00D9E6]">
+            <Link to="/admin/events/new">
+              <Plus className="h-4 w-4 mr-2" />
+              {t("cms.createEvent")}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card className="bg-zinc-900 border-zinc-800 mb-6">
@@ -271,6 +365,17 @@ export default function AdminEventsPage() {
           <p className="text-zinc-400">{t("cms.noEventsFound")}</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, eventId: deleteConfirm.eventId })}
+        title="Eliminar Evento"
+        description="¿Estás seguro de que quieres eliminar este evento? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
       </div>
     </div>
   );

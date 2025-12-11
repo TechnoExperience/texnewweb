@@ -10,6 +10,7 @@ import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { analyzeSeo } from "@/lib/seo-analyzer"
+import { toast } from "sonner"
 import type { Review } from "@/types"
 
 const REVIEW_TYPES = ["event", "dj", "club", "promoter", "general"]
@@ -67,7 +68,9 @@ export default function AdminReviewsEditPage() {
       const { data, error } = await supabase.from("reviews").select("*").eq("id", id).single()
       if (error) {
         console.error("Error loading review:", error)
-        alert("Error al cargar la review")
+        toast.error("Error al cargar la review", {
+          description: error.message || "Ocurrió un error inesperado.",
+        })
         navigate("/admin/reviews")
       } else if (data) {
         setReview(data)
@@ -147,7 +150,9 @@ export default function AdminReviewsEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!review.title || !review.slug || !review.excerpt || !review.content) {
-      alert("Título, slug, extracto y contenido son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título, slug, extracto y contenido son obligatorios.",
+      })
       return
     }
 
@@ -160,7 +165,9 @@ export default function AdminReviewsEditPage() {
       review.venue_name
 
     if (!hasRelation && !isEditMode) {
-      alert("Debes seleccionar al menos una relación: evento, DJ, club, promotor o ingresar un nombre de venue.")
+      toast.error("Relación requerida", {
+        description: "Debes seleccionar al menos una relación: evento, DJ, club, promotor o ingresar un nombre de venue.",
+      })
       return
     }
 
@@ -187,6 +194,10 @@ export default function AdminReviewsEditPage() {
       related_dj_id: review.related_dj_id || null,
       related_promoter_id: review.related_promoter_id || null,
       venue_name: review.venue_name || null,
+      // SEO fields
+      seo_title: seo.metaTitle || review.title || null,
+      seo_description: seo.metaDescription || review.excerpt || null,
+      seo_focus_keyword: seo.focusKeyword || null,
     }
 
     try {
@@ -194,7 +205,10 @@ export default function AdminReviewsEditPage() {
       if (!result.success) {
         const errorMsg = result.error?.message || "Error al guardar la review"
         console.error("Error saving review:", result.error)
-        alert(`Error al guardar la review: ${errorMsg}`)
+        toast.error("Error al guardar la review", {
+          description: errorMsg,
+          duration: 5000,
+        })
         throw result.error || new Error(errorMsg)
       }
       navigate("/admin/reviews")

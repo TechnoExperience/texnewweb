@@ -168,8 +168,11 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || 
-      Deno.env.get('SUPABASE_PROJECT_URL') || 
-      'https://cfgfshoobuvycrbhnvkd.supabase.co'
+      Deno.env.get('SUPABASE_PROJECT_URL')
+    
+    if (!supabaseUrl) {
+      throw new Error('SUPABASE_URL no configurado en Edge Function')
+    }
     
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 
       Deno.env.get('SERVICE_ROLE_KEY')
@@ -180,23 +183,30 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Configuración: Solo 2 ciudades principales para evitar timeout (puedes aumentar después)
+    // Configuración: Solo 2 ciudades principales para evitar timeout y baneos
     const TARGET_CITIES = [
       { city: 'Madrid', area: 'madrid' },
       { city: 'Barcelona', area: 'barcelona' },
     ]
 
-    // Rate limiter: máximo 10 peticiones por hora (muy conservador)
-    const rateLimiter = new RateLimiter(10, 60)
+    // Rate limiter: máximo 5 peticiones por hora (muy conservador para evitar baneos)
+    const rateLimiter = new RateLimiter(5, 60)
 
     let totalCreated = 0
     let totalUpdated = 0
     let totalSkipped = 0
+    let totalFound = 0 // Total eventos encontrados en RA
     const errors: string[] = []
+    const cityStats: Array<{ city: string; found: number; created: number; skipped: number }> = []
 
     // Función para obtener eventos usando RSS Feed (más permisivo que GraphQL)
     async function fetchRAEventsRSS(city: string): Promise<any[]> {
       try {
+        // Validar entrada
+        if (!city || typeof city !== 'string') {
+          console.error(`❌ Error: city inválido para fetchRAEventsRSS: ${city}`)
+          return []
+        }
         // Intentar primero con RSS feed (más permisivo, menos bloqueos)
         const rssUrl = `https://ra.co/events/${city}/rss`
         
@@ -250,13 +260,19 @@ Deno.serve(async (req) => {
         return events.slice(0, 10) // Limitar a 10 eventos por ciudad para evitar timeout
       } catch (error) {
         console.error(`Error en RSS para ${city}:`, error)
-        return await fetchRAEventsGraphQL(city)
+        const fallback = await fetchRAEventsGraphQL(city)
+        return Array.isArray(fallback) ? fallback : []
       }
     }
 
     // Fallback a GraphQL (solo si RSS falla)
     async function fetchRAEventsGraphQL(city: string): Promise<any[]> {
       try {
+        // Validar entrada
+        if (!city || typeof city !== 'string') {
+          console.error(`❌ Error: city inválido para fetchRAEventsGraphQL: ${city}`)
+          return []
+        }
         await rateLimiter.waitIfNeeded()
         
         // Usar query más simple y menos sospechosa
@@ -291,7 +307,8 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json()
-        return data.data?.events || []
+        const events = data?.data?.events || []
+        return Array.isArray(events) ? events : []
       } catch (error) {
         console.error(`Error en GraphQL para ${city}:`, error)
         return []
@@ -311,40 +328,92 @@ Deno.serve(async (req) => {
         // Intentar RSS primero (más permisivo)
         let raEvents = await fetchRAEventsRSS(area)
         
-        // Si RSS no devuelve resultados, intentar GraphQL
-        if (raEvents.length === 0) {
-          console.log(`   RSS vacío, intentando GraphQL...`)
+        // Validar que raEvents es un array
+        if (!Array.isArray(raEvents)) {
+          console.warn(`⚠️ fetchRAEventsRSS no devolvió un array para ${city}, intentando GraphQL...`)
           raEvents = await fetchRAEventsGraphQL(area)
         }
         
+        // Validar nuevamente después de GraphQL
+        if (!Array.isArray(raEvents)) {
+          console.error(`❌ Error: No se pudo obtener eventos para ${city}`)
+          errors.push(`${city}: Error al obtener eventos - respuesta inválida`)
+          cityStats.push({
+            city,
+            found: 0,
+            created: 0,
+            skipped: 0
+          })
+          continue
+        }
+        
+        // Si RSS no devuelve resultados, intentar GraphQL
+        if (raEvents.length === 0) {
+          console.log(`   RSS vacío, intentando GraphQL...`)
+          const graphQLEvents = await fetchRAEventsGraphQL(area)
+          if (Array.isArray(graphQLEvents)) {
+            raEvents = graphQLEvents
+          }
+        }
+        
         console.log(`   ✅ Encontrados ${raEvents.length} eventos`)
+        console.log(`   🔍 Debug - raEvents es array:`, Array.isArray(raEvents))
+        console.log(`   🔍 Debug - raEvents.length:`, raEvents.length)
+        totalFound += raEvents.length
+        console.log(`   🔍 Debug - totalFound después de ${city}:`, totalFound)
+        
+        let cityCreated = 0
+        let citySkipped = 0
         
         // Procesar eventos con delay entre cada uno
         for (const raEvent of raEvents) {
           try {
+            // Validar que raEvent existe y tiene datos mínimos
+            if (!raEvent || typeof raEvent !== 'object') {
+              console.warn(`⚠️ Evento inválido en ${city}, saltando...`)
+              continue
+            }
+
             const eventId = raEvent.id || String(Date.now())
             
             // Verificar si ya existe
-            const { data: existing, error: checkError } = await supabase
+            const checkResult = await supabase
               .from('events')
               .select('id')
               .eq('ra_event_id', eventId)
               .maybeSingle()
 
-            if (existing && !checkError) {
-              totalSkipped++
+            // Validar que checkResult existe
+            if (!checkResult) {
+              console.warn(`⚠️ Error al verificar evento existente en ${city}, saltando...`)
               continue
             }
 
-            // Crear evento
-            const slug = `${eventId}-${raEvent.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}`
+            const { data: existing, error: checkError } = checkResult
+
+            if (existing && !checkError) {
+              totalSkipped++
+              citySkipped++
+              continue
+            }
+
+            // Crear evento con validación de título
+            const eventTitle = raEvent.title || 'Evento'
+            const slug = `${eventId}-${String(eventTitle).toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}`
             const eventDate = raEvent.date ? new Date(raEvent.date) : new Date()
             
+            // Validar que la fecha es válida
+            let validEventDate = eventDate
+            if (isNaN(validEventDate.getTime())) {
+              console.warn(`⚠️ Fecha inválida para evento en ${city}, usando fecha actual`)
+              validEventDate = new Date()
+            }
+            
             const eventData = {
-              title: raEvent.title || 'Evento',
+              title: eventTitle,
               slug: slug.substring(0, 100),
               description: `Evento sincronizado desde Resident Advisor`,
-              event_date: eventDate.toISOString(),
+              event_date: validEventDate.toISOString(),
               venue: 'TBA',
               city: city,
               country: 'España',
@@ -356,7 +425,7 @@ Deno.serve(async (req) => {
               ra_event_id: eventId,
               ra_synced: true,
               ra_sync_date: new Date().toISOString(),
-              status: 'DRAFT', // Requiere moderación
+              status: 'draft', // Requiere moderación (valores: draft, pub, can)
             }
 
             const insertResult = await supabase
@@ -364,14 +433,23 @@ Deno.serve(async (req) => {
               .insert(eventData)
               .select()
 
+            // Validar que insertResult existe
+            if (!insertResult) {
+              console.error(`❌ Error: insertResult es undefined para evento en ${city}`)
+              errors.push(`${city}: Error al insertar evento - resultado indefinido`)
+              continue
+            }
+
             if (insertResult.error) {
               if (insertResult.error.code !== '23505') { // Ignorar duplicados
-                errors.push(`${city}: ${insertResult.error.message}`)
+                errors.push(`${city}: ${insertResult.error.message || 'Error desconocido'}`)
               } else {
                 totalSkipped++
+                citySkipped++
               }
             } else if (insertResult.data && insertResult.data.length > 0) {
               totalCreated++
+              cityCreated++
             }
 
             // Delay más corto entre eventos (200ms - 800ms) para evitar timeout
@@ -381,6 +459,17 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Guardar estadísticas de la ciudad
+        const cityStat = {
+          city,
+          found: raEvents.length,
+          created: cityCreated,
+          skipped: citySkipped
+        }
+        console.log(`   🔍 Debug - cityStat para ${city}:`, JSON.stringify(cityStat))
+        cityStats.push(cityStat)
+        console.log(`   🔍 Debug - cityStats después de ${city}:`, JSON.stringify(cityStats))
+        
         // Delay más corto entre ciudades (2-4 segundos) para evitar timeout
         if (i < TARGET_CITIES.length - 1) {
           const delay = 2000 + Math.random() * 2000
@@ -389,21 +478,38 @@ Deno.serve(async (req) => {
         }
       } catch (cityError) {
         errors.push(`${city}: ${cityError instanceof Error ? cityError.message : String(cityError)}`)
+        cityStats.push({
+          city,
+          found: 0,
+          created: 0,
+          skipped: 0
+        })
       }
     }
 
+    // Debug: Verificar valores antes de crear el resultado
+    console.log('🔍 Debug - totalFound:', totalFound)
+    console.log('🔍 Debug - cityStats:', JSON.stringify(cityStats))
+    console.log('🔍 Debug - totalCreated:', totalCreated)
+    console.log('🔍 Debug - totalSkipped:', totalSkipped)
+    console.log('🔍 Debug - errors.length:', errors.length)
+    
     const result = {
       success: errors.length < TARGET_CITIES.length,
       timestamp: new Date().toISOString(),
+      totalFound, // Total eventos encontrados en RA
       totalCreated,
       totalUpdated,
       totalSkipped,
       errors: errors.slice(0, 10),
       strategy: 'stealth_mode',
       citiesProcessed: TARGET_CITIES.length,
+      cityStats, // Estadísticas por ciudad
     }
 
-    console.log('✅ Sync completado:', result)
+    console.log('✅ Sync completado:', JSON.stringify(result, null, 2))
+    console.log('🔍 Debug - result.totalFound:', result.totalFound)
+    console.log('🔍 Debug - result.cityStats:', JSON.stringify(result.cityStats))
 
     return new Response(
       JSON.stringify(result),

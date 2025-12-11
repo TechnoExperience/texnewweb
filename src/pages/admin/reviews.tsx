@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
 import { format } from "date-fns"
 import { Plus, Search, Edit, Trash2, Eye, Star } from "lucide-react"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { Review } from "@/types"
 import { analyzeSeo } from "@/lib/seo-analyzer"
 
@@ -15,6 +17,10 @@ export default function AdminReviewsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; reviewId: string | null }>({
+    open: false,
+    reviewId: null,
+  })
 
   useEffect(() => {
     loadReviews()
@@ -33,17 +39,24 @@ export default function AdminReviewsPage() {
   }
 
   async function deleteReview(id: string) {
-    if (!window.confirm("¿Estás seguro de eliminar esta review?")) return
+    setDeleteConfirm({ open: true, reviewId: id })
+  }
 
-    const { error } = await supabase.from("reviews").delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.reviewId) return
+
+    const { error } = await supabase.from("reviews").delete().eq("id", deleteConfirm.reviewId)
 
     if (error) {
       console.error("Error deleting review:", error)
-      alert("Error al eliminar la review")
-      return
+      toast.error("Error al eliminar la review", {
+        description: error.message || "No se pudo eliminar la review.",
+      })
+    } else {
+      setReviews(reviews.filter((r) => r.id !== deleteConfirm.reviewId))
+      toast.success("Review eliminada correctamente")
     }
-
-    setReviews(reviews.filter((r) => r.id !== id))
+    setDeleteConfirm({ open: false, reviewId: null })
   }
 
   const filteredReviews = reviews.filter((review) => {
@@ -184,6 +197,17 @@ export default function AdminReviewsPage() {
           <p className="text-zinc-400">No se encontraron reviews</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, reviewId: deleteConfirm.reviewId })}
+        title="Eliminar Review"
+        description="¿Estás seguro de que quieres eliminar esta review? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   )
 }

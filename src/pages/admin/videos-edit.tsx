@@ -10,6 +10,8 @@ import { saveToCMS } from "@/lib/cms-sync"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { EmbeddedPlayer } from "@/components/embedded-player"
 import { getEmbedFromUrl } from "@/lib/embeds"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { toast } from "sonner"
 import type { Video } from "@/types"
 
 const VIDEO_TYPES = ["aftermovie", "live_set", "music_video", "dj_mix"]
@@ -19,11 +21,12 @@ export default function AdminVideosEditPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const isEditMode = !!id
+  const { userId } = useUserProfile()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [video, setVideo] = useState<Partial<Video>>({
-    status: "PENDING_REVIEW",
+    status: "pend",
     featured: false,
     language: "es",
     view_count: 0,
@@ -42,7 +45,9 @@ export default function AdminVideosEditPage() {
       const { data, error } = await supabase.from("videos").select("*").eq("id", id).single()
       if (error) {
         console.error("Error loading video:", error)
-        alert("Error al cargar el vídeo")
+        toast.error("Error al cargar el vídeo", {
+          description: error.message || "No se pudo cargar el vídeo. Redirigiendo...",
+        })
         navigate("/admin/videos")
       } else if (data) {
         setVideo(data)
@@ -86,7 +91,9 @@ export default function AdminVideosEditPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!video.title || !video.video_url) {
-      alert("Título y URL del vídeo son obligatorios.")
+      toast.error("Campos obligatorios faltantes", {
+        description: "Título y URL del vídeo son obligatorios.",
+      })
       return
     }
 
@@ -107,32 +114,30 @@ export default function AdminVideosEditPage() {
       language: video.language || "es",
       featured: video.featured ?? false,
       view_count: video.view_count || 0,
-      status: video.status || "PENDING_REVIEW",
+      status: video.status || "pend",
       provider: video.provider || embedPreview?.provider || null,
       embed_data: video.embed_data || embedPreview || null,
       uploader_id: video.uploader_id || null,
     }
 
+    // Agregar created_by y uploader_id al crear nuevo video
+    if (!isEditMode && userId) {
+      payload.created_by = userId
+      payload.uploader_id = userId // Unificar: usar userId para ambos campos
+    }
+
     try {
-      // Obtener usuario actual para uploader_id (solo en creación)
-      if (!isEditMode) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).single()
-          if (profile) {
-            payload.uploader_id = profile.id
-          }
-        }
-      }
-      
       const result = await saveToCMS("videos", payload, isEditMode ? id : undefined)
       if (!result.success) {
         throw result.error || new Error("Error al guardar el vídeo")
       }
       navigate("/admin/videos")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving video:", error)
-      alert("Error al guardar el vídeo")
+      toast.error("Error al guardar el vídeo", {
+        description: error?.message || "No se pudo guardar el vídeo. Intenta de nuevo.",
+        duration: 5000,
+      })
     } finally {
       setSaving(false)
     }

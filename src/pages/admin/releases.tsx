@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { TABLES } from "@/constants/tables"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Disc, Search, Plus, Edit, Trash2, Eye } from "lucide-react"
 import { Link } from "react-router-dom"
 import { format } from "date-fns"
+import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface Release {
   id: string
@@ -24,6 +27,10 @@ export default function AdminReleasesPage() {
   const [releases, setReleases] = useState<Release[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; releaseId: string | null }>({
+    open: false,
+    releaseId: null,
+  })
   const [genreFilter, setGenreFilter] = useState<string>("all")
 
   useEffect(() => {
@@ -32,7 +39,7 @@ export default function AdminReleasesPage() {
 
   async function fetchReleases() {
     const { data, error } = await supabase
-      .from("dj_releases")
+      .from(TABLES.DJ_RELEASES)
       .select("id, title, artist, label, release_date, cover_art, genre")
       .order("release_date", { ascending: false })
 
@@ -45,16 +52,24 @@ export default function AdminReleasesPage() {
   }
 
   async function deleteRelease(id: string) {
-    if (!confirm(t("cms.confirmDelete"))) return
+    setDeleteConfirm({ open: true, releaseId: id })
+  }
 
-    const { error } = await supabase.from("dj_releases").delete().eq("id", id)
+  async function handleDeleteConfirm() {
+    if (!deleteConfirm.releaseId) return
+
+    const { error } = await supabase.from("dj_releases").delete().eq("id", deleteConfirm.releaseId)
 
     if (error) {
       console.error("Error deleting release:", error)
-      alert("Error al eliminar el lanzamiento")
+      toast.error("Error al eliminar el lanzamiento", {
+        description: error.message || "No se pudo eliminar el lanzamiento.",
+      })
     } else {
-      setReleases(releases.filter((release) => release.id !== id))
+      setReleases(releases.filter((release) => release.id !== deleteConfirm.releaseId))
+      toast.success("Lanzamiento eliminado correctamente")
     }
+    setDeleteConfirm({ open: false, releaseId: null })
   }
 
   const filteredReleases = releases.filter((release) => {
@@ -190,6 +205,17 @@ export default function AdminReleasesPage() {
           <p className="text-zinc-400">{t("cms.noReleasesFound")}</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, releaseId: deleteConfirm.releaseId })}
+        title="Eliminar Lanzamiento"
+        description="¿Estás seguro de que quieres eliminar este lanzamiento? Esta acción no se puede deshacer."
+        onConfirm={handleDeleteConfirm}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="destructive"
+      />
     </div>
   )
 }
